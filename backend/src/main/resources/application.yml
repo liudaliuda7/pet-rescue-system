@@ -1,0 +1,47 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: rescue-backend
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./data/rescue;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER,VALUE,KEY,DAY,MONTH,YEAR
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+      continue-on-error: false
+      encoding: UTF-8
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      id-type: auto
+
+logging:
+  level:
+    com.rescue: info
+    org.springframework: warn
+
+upload:
+  path: ./uploads/
