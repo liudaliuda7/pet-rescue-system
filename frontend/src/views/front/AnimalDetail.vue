@@ -26,6 +26,17 @@
           </div>
         </el-col>
       </el-row>
+
+      <div style="margin-top:40px;">
+        <h3 style="margin-bottom:16px;">健康档案</h3>
+        <el-timeline v-if="healthRecords.length">
+          <el-timeline-item v-for="r in healthRecords" :key="r.id" :timestamp="r.recordDate" placement="top">
+            <p style="margin:0;font-weight:bold;">医生：{{ r.doctor || '未记录' }}</p>
+            <p style="margin:4px 0 0;">{{ r.content }}</p>
+          </el-timeline-item>
+        </el-timeline>
+        <p v-else style="color:#999;">暂无健康记录</p>
+      </div>
     </div>
 
     <el-dialog title="领养申请" :visible.sync="show" width="500px">
@@ -43,12 +54,12 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi } from '@/api'
+import { animalApi, adoptionApi, healthApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
-      a: null, loading: true, show: false, submitting: false,
+      a: null, loading: true, show: false, submitting: false, healthRecords: [],
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -59,7 +70,9 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    const id = this.$route.params.id
+    animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    healthApi.publicList(id).then(r => { this.healthRecords = r.data || [] })
   },
   methods: {
     apply() {

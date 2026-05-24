@@ -24,6 +24,11 @@
       <el-table-column prop="age" label="年龄" width="80"/>
       <el-table-column prop="stationName" label="救助站"/>
       <el-table-column prop="healthStatus" label="健康"/>
+      <el-table-column label="健康记录" width="100">
+        <template slot-scope="s">
+          <el-link type="primary" @click="goHealth(s.row)">{{ s.row.healthCount || 0 }}</el-link>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template slot-scope="s"><el-tag size="mini" :type="s.row.status==='available'?'success':s.row.status==='adopted'?'info':'warning'">{{ statusText(s.row.status) }}</el-tag></template>
       </el-table-column>
@@ -86,6 +91,10 @@ export default {
   },
   methods: {
     statusText(s) { return { available: '待领养', adopted: '已领养', treatment: '治疗中' }[s] || s },
+    goHealth(row) {
+      const prefix = this.role === 'admin' ? '/admin' : '/station'
+      this.$router.push({ path: prefix + '/health', query: { animalId: row.id } })
+    },
     onUp(r) { if (r.code === 200) { this.form.image = r.data.url; this.$message.success('上传成功') } },
     load(p) { if (p) this.q.current = p; animalApi.page(this.q).then(r => { this.list = r.data.records || []; this.total = r.data.total || 0 }) },
     open(row) {

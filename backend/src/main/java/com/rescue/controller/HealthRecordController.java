@@ -30,6 +30,14 @@ public class HealthRecordController {
             if (r.getAnimalId() != null) r.setAnimalName(animalMap.get(r.getAnimalId()));
     }
 
+    @GetMapping("/public/list")
+    public Result<?> publicList(@RequestParam Long animalId) {
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.eq("animal_id", animalId).orderByDesc("record_date");
+        List<HealthRecord> list = mapper.selectList(q);
+        return Result.ok(list);
+    }
+
     @GetMapping("/page")
     public Result<?> page(@RequestParam(defaultValue = "1") int current,
                           @RequestParam(defaultValue = "10") int size,

@@ -8,8 +8,10 @@ import com.rescue.entity.Animal;
 import com.rescue.entity.AnimalType;
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.User;
+import com.rescue.entity.HealthRecord;
 import com.rescue.mapper.AnimalMapper;
 import com.rescue.mapper.AnimalTypeMapper;
+import com.rescue.mapper.HealthRecordMapper;
 import com.rescue.mapper.RescueStationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class AnimalController {
     @Autowired private AnimalMapper mapper;
     @Autowired private AnimalTypeMapper typeMapper;
     @Autowired private RescueStationMapper stationMapper;
+    @Autowired private HealthRecordMapper healthRecordMapper;
 
     private void enrich(List<Animal> list) {
         if (list == null || list.isEmpty()) return;
@@ -35,6 +38,23 @@ public class AnimalController {
         for (Animal a : list) {
             if (a.getTypeId() != null) a.setTypeName(typeMap.get(a.getTypeId()));
             if (a.getStationId() != null) a.setStationName(stMap.get(a.getStationId()));
+        }
+    }
+
+    private void fillHealthCount(List<Animal> list) {
+        if (list == null || list.isEmpty()) return;
+        List<Long> animalIds = list.stream().map(Animal::getId).collect(Collectors.toList());
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.in("animal_id", animalIds).select("animal_id", "count(*) as id").groupBy("animal_id");
+        List<Map<String, Object>> counts = healthRecordMapper.selectMaps(q);
+        Map<Long, Integer> countMap = new HashMap<>();
+        for (Map<String, Object> row : counts) {
+            Long animalId = ((Number) row.get("animal_id")).longValue();
+            Integer count = ((Number) row.get("id")).intValue();
+            countMap.put(animalId, count);
+        }
+        for (Animal a : list) {
+            a.setHealthCount(countMap.getOrDefault(a.getId(), 0));
         }
     }
 
@@ -56,6 +76,7 @@ public class AnimalController {
         q.orderByDesc("id");
         Page<Animal> res = mapper.selectPage(p, q);
         enrich(res.getRecords());
+        fillHealthCount(res.getRecords());
         return Result.ok(res);
     }
 
