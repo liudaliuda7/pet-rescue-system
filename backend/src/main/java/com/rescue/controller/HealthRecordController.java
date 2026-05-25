@@ -12,6 +12,7 @@ import com.rescue.mapper.HealthRecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class HealthRecordController {
     @Autowired private HealthRecordMapper mapper;
     @Autowired private AnimalMapper animalMapper;
+    @Autowired private com.rescue.common.TokenStore tokenStore;
 
     private void enrich(List<HealthRecord> list) {
         if (list == null || list.isEmpty()) return;
@@ -31,7 +33,17 @@ public class HealthRecordController {
     }
 
     @GetMapping("/public/list")
-    public Result<?> publicList(@RequestParam Long animalId) {
+    public Result<?> publicList(@RequestParam Long animalId, HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) token = token.substring(7);
+        if (token == null) token = request.getHeader("token");
+        User cur = tokenStore.get(token);
+        if (cur != null && "station".equals(cur.getRole())) {
+            Animal animal = animalMapper.selectById(animalId);
+            if (animal == null || !cur.getStationId().equals(animal.getStationId())) {
+                return Result.error(403, "无权查看该动物的健康记录");
+            }
+        }
         QueryWrapper<HealthRecord> q = new QueryWrapper<>();
         q.eq("animal_id", animalId).orderByDesc("record_date");
         List<HealthRecord> list = mapper.selectList(q);

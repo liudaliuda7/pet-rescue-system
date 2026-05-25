@@ -44,15 +44,10 @@ public class AnimalController {
     private void fillHealthCount(List<Animal> list) {
         if (list == null || list.isEmpty()) return;
         List<Long> animalIds = list.stream().map(Animal::getId).collect(Collectors.toList());
-        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
-        q.in("animal_id", animalIds).select("animal_id", "count(*) as id").groupBy("animal_id");
-        List<Map<String, Object>> counts = healthRecordMapper.selectMaps(q);
-        Map<Long, Integer> countMap = new HashMap<>();
-        for (Map<String, Object> row : counts) {
-            Long animalId = ((Number) row.get("animal_id")).longValue();
-            Integer count = ((Number) row.get("id")).intValue();
-            countMap.put(animalId, count);
-        }
+        List<HealthRecord> records = healthRecordMapper.selectList(
+            new QueryWrapper<HealthRecord>().in("animal_id", animalIds).select("animal_id"));
+        Map<Long, Integer> countMap = records.stream()
+            .collect(Collectors.groupingBy(HealthRecord::getAnimalId, Collectors.summingInt(r -> 1)));
         for (Animal a : list) {
             a.setHealthCount(countMap.getOrDefault(a.getId(), 0));
         }
