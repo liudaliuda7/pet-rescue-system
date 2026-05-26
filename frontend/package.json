@@ -8,8 +8,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@esbuild/darwin-x64": "^0.28.0",
     "axios": "^1.6.7",
     "element-ui": "^2.15.14",
+    "esbuild": "^0.28.0",
     "vue": "^2.7.16",
     "vue-router": "^3.6.5"
   },

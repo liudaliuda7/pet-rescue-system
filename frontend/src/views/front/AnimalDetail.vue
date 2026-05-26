@@ -22,6 +22,9 @@
           </el-descriptions>
           <div style="margin-top:20px;">
             <el-button type="primary" :disabled="a.status !== 'available'" @click="apply">申请领养</el-button>
+            <el-button :type="isFavorited ? 'warning' : 'default'" :loading="favLoading" @click="toggleFav">
+              {{ isFavorited ? '★ 已收藏' : '☆ 收藏' }}
+            </el-button>
             <el-button @click="$router.back()">返回</el-button>
           </div>
         </el-col>
@@ -54,12 +57,13 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi, healthApi } from '@/api'
+import { animalApi, adoptionApi, healthApi, favoriteApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
       a: null, loading: true, show: false, submitting: false, healthRecords: [],
+      isFavorited: false, favLoading: false,
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -73,8 +77,23 @@ export default {
     const id = this.$route.params.id
     animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
     healthApi.publicList(id).then(r => { this.healthRecords = r.data || [] })
+    if (isLoggedIn()) {
+      favoriteApi.status(id).then(r => { this.isFavorited = r.data }).catch(() => {})
+    }
   },
   methods: {
+    toggleFav() {
+      if (!isLoggedIn()) {
+        this.$message.warning('请先登录')
+        this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+        return
+      }
+      this.favLoading = true
+      favoriteApi.toggle(this.a.id).then(r => {
+        this.isFavorited = !this.isFavorited
+        this.$message.success(r.data)
+      }).finally(() => { this.favLoading = false })
+    },
     apply() {
       if (!isLoggedIn()) {
         this.$message.warning('请先登录'); this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } }); return

@@ -45,6 +45,12 @@ export const noticeApi = {
   publicGet: id => request.get('/notice/public/' + id),
   latest: () => request.get('/notice/public/latest')
 }
+export const favoriteApi = {
+  toggle: animalId => request.post('/favorite/toggle/' + animalId),
+  status: animalId => request.get('/favorite/status/' + animalId),
+  my: () => request.get('/favorite/my'),
+  remove: animalId => request.delete('/favorite/' + animalId)
+}
 export const statsApi = { dashboard: () => request.get('/stats/dashboard') }
 export const systemApi = { info: () => request.get('/system/info') }
 export const uploadUrl = '/api/upload'

@@ -52,12 +52,34 @@
           </el-table>
         </div>
       </el-tab-pane>
+      <el-tab-pane label="我的收藏" name="fav">
+        <div class="card">
+          <el-row :gutter="16" v-if="favorites.length">
+            <el-col :span="6" v-for="f in favorites" :key="f.id">
+              <el-card :body-style="{ padding: 0 }" shadow="hover" style="margin-bottom:16px;">
+                <img :src="f.animalImage || placeholder" style="width:100%;height:160px;object-fit:cover;display:block;cursor:pointer;" @click="$router.push('/animal/' + f.animalId)"/>
+                <div style="padding:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-weight:600;cursor:pointer;" @click="$router.push('/animal/' + f.animalId)">{{ f.animalName }}</span>
+                    <el-tag size="mini" :type="f.animalStatus==='available'?'success':f.animalStatus==='adopted'?'info':'warning'">
+                      {{ f.animalStatus==='available'?'待领养':f.animalStatus==='adopted'?'已领养':'治疗中' }}
+                    </el-tag>
+                  </div>
+                  <div style="color:#909399;font-size:12px;margin-top:6px;">{{ f.typeName || '' }} · {{ f.stationName || '未指派' }}</div>
+                  <el-button type="text" size="mini" style="color:#F56C6C;padding:4px 0 0;" @click="removeFav(f)">取消收藏</el-button>
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
+          <el-empty v-else description="暂无收藏"/>
+        </div>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
-import { userApi, helpApi, adoptionApi } from '@/api'
+import { userApi, helpApi, adoptionApi, favoriteApi } from '@/api'
 import { getUser, setAuth } from '@/utils/auth'
 export default {
   data() {
@@ -69,13 +91,15 @@ export default {
         oldPassword: [{ required: true, message: '请输入原密码' }],
         newPassword: [{ required: true, message: '请输入新密码' }, { min: 6, message: '至少 6 位' }]
       },
-      helps: [], adoptions: []
+      helps: [], adoptions: [], favorites: [],
+      placeholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
     }
   },
   watch: {
     tab(v) {
       if (v === 'help') helpApi.page({ current: 1, size: 50 }).then(r => { this.helps = r.data.records || [] })
       if (v === 'adopt') adoptionApi.page({ current: 1, size: 50 }).then(r => { this.adoptions = r.data.records || [] })
+      if (v === 'fav') this.loadFavorites()
     }
   },
   methods: {
@@ -96,6 +120,15 @@ export default {
           this.$message.success('密码已修改')
           this.pwd = { oldPassword: '', newPassword: '' }
         })
+      })
+    },
+    loadFavorites() {
+      favoriteApi.my().then(r => { this.favorites = r.data || [] })
+    },
+    removeFav(f) {
+      favoriteApi.remove(f.animalId).then(() => {
+        this.$message.success('已取消收藏')
+        this.favorites = this.favorites.filter(i => i.id !== f.id)
       })
     }
   }

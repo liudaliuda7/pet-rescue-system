@@ -126,3 +126,12 @@ CREATE TABLE notice (
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted INT DEFAULT 0
 );
+
+DROP TABLE IF EXISTS favorite;
+CREATE TABLE favorite (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  animal_id BIGINT NOT NULL,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_animal (user_id, animal_id)
+);
