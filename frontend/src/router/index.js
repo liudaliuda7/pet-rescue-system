@@ -38,6 +38,7 @@ const routes = [
       { path: 'visit', name: 'admin-visit', component: () => import('@/views/admin/VisitMgmt.vue') },
       { path: 'health', name: 'admin-health', component: () => import('@/views/admin/HealthMgmt.vue') },
       { path: 'notice', name: 'admin-notice', component: () => import('@/views/admin/NoticeMgmt.vue') },
+      { path: 'message', name: 'admin-message', component: () => import('@/views/admin/MessageMgmt.vue') },
       { path: 'system', name: 'admin-system', component: () => import('@/views/admin/SystemInfo.vue') },
       { path: 'profile', name: 'admin-profile', component: () => import('@/views/common/ProfilePage.vue') }
     ]

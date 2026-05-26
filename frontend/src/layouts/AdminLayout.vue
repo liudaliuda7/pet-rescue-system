@@ -19,6 +19,7 @@
         <el-submenu index="sys">
           <template slot="title"><i class="el-icon-setting"/><span>系统管理</span></template>
           <el-menu-item index="/admin/notice">公告管理</el-menu-item>
+          <el-menu-item index="/admin/message">消息管理</el-menu-item>
           <el-menu-item index="/admin/system">系统信息</el-menu-item>
         </el-submenu>
         <el-menu-item index="/admin/profile"><i class="el-icon-user"/><span>个人中心</span></el-menu-item>
@@ -29,6 +30,7 @@
         <div>欢迎使用流浪动物救助管理后台</div>
         <div>
           <el-button type="text" @click="$router.push('/')">返回前台</el-button>
+          <notify-bell all-path="/admin/message" style="vertical-align:middle;margin-right:8px;"/>
           <el-dropdown @command="onCmd">
             <span class="user-bar">
               <i class="el-icon-user-solid"></i>
@@ -50,7 +52,9 @@
 <script>
 import { getUser, clearAuth } from '@/utils/auth'
 import { auth } from '@/api'
+import NotifyBell from '@/components/NotifyBell.vue'
 export default {
+  components: { NotifyBell },
   data() { return { user: getUser() } },
   methods: {
     onCmd(cmd) {

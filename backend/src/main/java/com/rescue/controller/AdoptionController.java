@@ -6,9 +6,11 @@ import com.rescue.common.Result;
 import com.rescue.common.TokenStore;
 import com.rescue.entity.Adoption;
 import com.rescue.entity.Animal;
+import com.rescue.entity.Message;
 import com.rescue.entity.User;
 import com.rescue.mapper.AdoptionMapper;
 import com.rescue.mapper.AnimalMapper;
+import com.rescue.mapper.MessageMapper;
 import com.rescue.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ public class AdoptionController {
     @Autowired private AdoptionMapper mapper;
     @Autowired private AnimalMapper animalMapper;
     @Autowired private UserMapper userMapper;
+    @Autowired private MessageMapper messageMapper;
 
     private void enrich(List<Adoption> list) {
         if (list == null || list.isEmpty()) return;
@@ -88,6 +91,20 @@ public class AdoptionController {
         db.setStatus(r.getStatus());
         db.setRemark(r.getRemark());
         mapper.updateById(db);
+        Message msg = new Message();
+        msg.setUserId(db.getUserId());
+        msg.setRelatedId(db.getId());
+        msg.setIsRead(0);
+        if ("approved".equals(r.getStatus())) {
+            msg.setType("adoption_approved");
+            msg.setTitle("领养申请已通过");
+            msg.setContent("您的领养申请已审核通过，请关注后续通知。");
+        } else if ("rejected".equals(r.getStatus())) {
+            msg.setType("adoption_rejected");
+            msg.setTitle("领养申请未通过");
+            msg.setContent("您的领养申请未通过审核" + (r.getRemark() != null ? "，原因：" + r.getRemark() : "") + "。");
+        }
+        if (msg.getType() != null) messageMapper.insert(msg);
         if ("approved".equals(r.getStatus()) && db.getAnimalId() != null) {
             Animal a = animalMapper.selectById(db.getAnimalId());
             if (a != null) { a.setStatus("adopted"); animalMapper.updateById(a); }

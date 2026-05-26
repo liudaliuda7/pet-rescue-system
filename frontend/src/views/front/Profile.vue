@@ -74,12 +74,37 @@
           <el-empty v-else description="暂无收藏"/>
         </div>
       </el-tab-pane>
+      <el-tab-pane label="我的消息" name="msg">
+        <div class="card">
+          <div style="margin-bottom:12px;text-align:right;">
+            <el-button size="mini" @click="markAllMsgRead" :disabled="!msgUnread">全部标记已读</el-button>
+          </div>
+          <el-table :data="messages" border>
+            <el-table-column prop="title" label="标题"/>
+            <el-table-column prop="content" label="内容" show-overflow-tooltip/>
+            <el-table-column label="类型" width="120">
+              <template slot-scope="s"><el-tag size="mini">{{ msgTypeText(s.row.type) }}</el-tag></template>
+            </el-table-column>
+            <el-table-column label="状态" width="80">
+              <template slot-scope="s">
+                <el-tag size="mini" :type="s.row.isRead ? 'info' : 'warning'">{{ s.row.isRead ? '已读' : '未读' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="时间" width="180"/>
+            <el-table-column label="操作" width="100">
+              <template slot-scope="s">
+                <el-button size="mini" type="text" @click="readMsg(s.row)" :disabled="!!s.row.isRead">标记已读</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
-import { userApi, helpApi, adoptionApi, favoriteApi } from '@/api'
+import { userApi, helpApi, adoptionApi, favoriteApi, messageApi } from '@/api'
 import { getUser, setAuth } from '@/utils/auth'
 export default {
   data() {
@@ -91,7 +116,7 @@ export default {
         oldPassword: [{ required: true, message: '请输入原密码' }],
         newPassword: [{ required: true, message: '请输入新密码' }, { min: 6, message: '至少 6 位' }]
       },
-      helps: [], adoptions: [], favorites: [],
+      helps: [], adoptions: [], favorites: [], messages: [], msgUnread: 0,
       placeholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
     }
   },
@@ -100,6 +125,7 @@ export default {
       if (v === 'help') helpApi.page({ current: 1, size: 50 }).then(r => { this.helps = r.data.records || [] })
       if (v === 'adopt') adoptionApi.page({ current: 1, size: 50 }).then(r => { this.adoptions = r.data.records || [] })
       if (v === 'fav') this.loadFavorites()
+      if (v === 'msg') this.loadMessages()
     }
   },
   methods: {
@@ -130,6 +156,21 @@ export default {
         this.$message.success('已取消收藏')
         this.favorites = this.favorites.filter(i => i.id !== f.id)
       })
+    },
+    loadMessages() {
+      messageApi.page({ current: 1, size: 50 }).then(r => {
+        this.messages = r.data.records || []
+        this.msgUnread = this.messages.filter(m => !m.isRead).length
+      })
+    },
+    readMsg(m) {
+      messageApi.read(m.id).then(() => { m.isRead = 1; this.msgUnread = Math.max(0, this.msgUnread - 1) })
+    },
+    markAllMsgRead() {
+      messageApi.readAll().then(() => { this.messages.forEach(m => m.isRead = 1); this.msgUnread = 0 })
+    },
+    msgTypeText(t) {
+      return { adoption_approved: '领养通过', adoption_rejected: '领养拒绝', help_assigned: '求助指派', help_new: '新求助任务' }[t] || t
     }
   }
 }

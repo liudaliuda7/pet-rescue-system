@@ -53,4 +53,11 @@ export const favoriteApi = {
 }
 export const statsApi = { dashboard: () => request.get('/stats/dashboard') }
 export const systemApi = { info: () => request.get('/system/info') }
+export const messageApi = {
+  page: p => request.get('/message/page', { params: p }),
+  unreadCount: () => request.get('/message/unread-count'),
+  read: id => request.put('/message/read/' + id),
+  readAll: () => request.put('/message/read-all'),
+  adminPage: p => request.get('/message/admin/page', { params: p })
+}
 export const uploadUrl = '/api/upload'

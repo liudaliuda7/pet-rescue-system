@@ -18,6 +18,7 @@
         <div>救助站工作台</div>
         <div>
           <el-button type="text" @click="$router.push('/')">返回前台</el-button>
+          <notify-bell all-path="/station/profile" style="vertical-align:middle;margin-right:8px;"/>
           <el-dropdown @command="onCmd">
             <span class="user-bar">
               <i class="el-icon-user-solid"></i>
@@ -39,7 +40,9 @@
 <script>
 import { getUser, clearAuth } from '@/utils/auth'
 import { auth } from '@/api'
+import NotifyBell from '@/components/NotifyBell.vue'
 export default {
+  components: { NotifyBell },
   data() { return { user: getUser() } },
   methods: {
     onCmd(cmd) {

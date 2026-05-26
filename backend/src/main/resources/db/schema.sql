@@ -135,3 +135,16 @@ CREATE TABLE favorite (
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uk_user_animal (user_id, animal_id)
 );
+
+DROP TABLE IF EXISTS message;
+CREATE TABLE message (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  type VARCHAR(32),
+  related_id BIGINT,
+  is_read INT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted INT DEFAULT 0
+);

@@ -12,6 +12,7 @@
         </el-menu>
         <div class="user-area">
           <template v-if="user">
+            <notify-bell all-path="/profile" style="margin-right:12px;vertical-align:middle;"/>
             <span style="margin-right:10px;">{{ user.name || user.username }}</span>
             <el-button size="mini" @click="goBackend" v-if="user.role !== 'user'">后台</el-button>
             <el-button size="mini" type="text" style="color:#fff;" @click="logout">退出</el-button>
@@ -35,7 +36,9 @@
 <script>
 import { getUser, clearAuth } from '@/utils/auth'
 import { auth } from '@/api'
+import NotifyBell from '@/components/NotifyBell.vue'
 export default {
+  components: { NotifyBell },
   data() { return { user: getUser() } },
   computed: { active() { return '/' + (this.$route.path.split('/')[1] || '') } },
   watch: {

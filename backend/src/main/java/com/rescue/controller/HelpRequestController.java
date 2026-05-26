@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rescue.common.Result;
 import com.rescue.common.TokenStore;
 import com.rescue.entity.HelpRequest;
+import com.rescue.entity.Message;
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.User;
 import com.rescue.mapper.HelpRequestMapper;
+import com.rescue.mapper.MessageMapper;
 import com.rescue.mapper.RescueStationMapper;
 import com.rescue.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ public class HelpRequestController {
     @Autowired private HelpRequestMapper mapper;
     @Autowired private UserMapper userMapper;
     @Autowired private RescueStationMapper stationMapper;
+    @Autowired private MessageMapper messageMapper;
 
     private void enrich(List<HelpRequest> list) {
         if (list == null || list.isEmpty()) return;
@@ -118,6 +121,30 @@ public class HelpRequestController {
         r.setStationId(stationId);
         if ("pending".equals(r.getStatus())) r.setStatus("processing");
         mapper.updateById(r);
+        if (r.getUserId() != null) {
+            Message userMsg = new Message();
+            userMsg.setUserId(r.getUserId());
+            userMsg.setType("help_assigned");
+            userMsg.setTitle("求助信息正在处理");
+            userMsg.setContent("您的求助「" + r.getTitle() + "」已被指派给救助站处理。");
+            userMsg.setRelatedId(r.getId());
+            userMsg.setIsRead(0);
+            messageMapper.insert(userMsg);
+        }
+        if (stationId != null) {
+            List<User> stationUsers = userMapper.selectList(
+                new QueryWrapper<User>().eq("station_id", stationId).eq("role", "station"));
+            for (User su : stationUsers) {
+                Message stationMsg = new Message();
+                stationMsg.setUserId(su.getId());
+                stationMsg.setType("help_new");
+                stationMsg.setTitle("新的求助任务");
+                stationMsg.setContent("有一条新的求助「" + r.getTitle() + "」已指派给您的救助站。");
+                stationMsg.setRelatedId(r.getId());
+                stationMsg.setIsRead(0);
+                messageMapper.insert(stationMsg);
+            }
+        }
         return Result.ok("已指派");
     }
 
