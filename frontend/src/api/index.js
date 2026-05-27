@@ -38,7 +38,10 @@ export const helpApi = {
 export const helpRecordApi = crud('/help-record')
 export const adoptionApi = { ...crud('/adoption'), audit: d => request.put('/adoption/audit', d) }
 export const visitApi = crud('/visit')
-export const healthApi = crud('/health')
+export const healthApi = {
+  ...crud('/health'),
+  publicList: p => request.get('/health/public/list', { params: p })
+}
 export const noticeApi = {
   ...crud('/notice'),
   publicPage: p => request.get('/notice/public/page', { params: p }),
