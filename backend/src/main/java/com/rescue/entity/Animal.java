@@ -28,4 +28,6 @@ public class Animal {
     private String typeName;
     @TableField(exist = false)
     private String stationName;
+    @TableField(exist = false)
+    private Integer healthRecordCount;
 }
