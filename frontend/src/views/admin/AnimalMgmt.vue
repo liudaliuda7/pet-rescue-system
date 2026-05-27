@@ -24,6 +24,11 @@
       <el-table-column prop="age" label="年龄" width="80"/>
       <el-table-column prop="stationName" label="救助站"/>
       <el-table-column prop="healthStatus" label="健康"/>
+      <el-table-column label="健康记录数" width="110" align="center">
+        <template slot-scope="s">
+          <el-button type="text" @click="goHealth(s.row)">{{ healthCounts[s.row.id] || 0 }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template slot-scope="s"><el-tag size="mini" :type="s.row.status==='available'?'success':s.row.status==='adopted'?'info':'warning'">{{ statusText(s.row.status) }}</el-tag></template>
       </el-table-column>
@@ -67,14 +72,14 @@
 </template>
 
 <script>
-import { animalApi, animalTypeApi, stationApi, uploadUrl } from '@/api'
+import { animalApi, animalTypeApi, stationApi, healthApi, uploadUrl } from '@/api'
 import { getUser } from '@/utils/auth'
 export default {
   data() {
     return {
       uploadUrl, headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
       q: { current: 1, size: 10, name: '', typeId: undefined, status: '' },
-      list: [], total: 0, types: [], stations: [], show: false, role: getUser().role,
+      list: [], total: 0, types: [], stations: [], show: false, role: getUser().role, healthCounts: {},
       form: { id: null, name: '', typeId: null, gender: '公', age: '', color: '', healthStatus: '健康', stationId: null, status: 'available', image: '', description: '' },
       rules: { name: [{ required: true, message: '请输入名字' }], typeId: [{ required: true, message: '请选择种类' }] }
     }
@@ -82,6 +87,7 @@ export default {
   mounted() {
     animalTypeApi.list().then(r => { this.types = r.data || [] })
     stationApi.list().then(r => { this.stations = r.data || [] })
+    healthApi.countByAnimal().then(r => { this.healthCounts = r.data || {} })
     this.load()
   },
   methods: {
@@ -98,6 +104,10 @@ export default {
         const fn = this.form.id ? animalApi.update : animalApi.add
         fn(this.form).then(() => { this.$message.success('已保存'); this.show = false; this.load() })
       })
+    },
+    goHealth(row) {
+      const base = this.role === 'station' ? '/station' : '/admin'
+      this.$router.push({ path: base + '/health', query: { animalId: row.id } })
     },
     del(row) {
       this.$confirm('确定删除？', '提示', { type: 'warning' }).then(() => animalApi.del(row.id).then(() => { this.$message.success('已删除'); this.load() })).catch(()=>{})

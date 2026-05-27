@@ -25,7 +25,8 @@ public class WebConfig implements WebMvcConfigurer {
         "/auth/login", "/auth/register",
         "/public/", "/uploads/", "/error",
         "/notice/public", "/animal/public", "/help/public",
-        "/animal-type/public", "/station/public"
+        "/animal-type/public", "/station/public",
+        "/health/public"
     );
 
     @Override
