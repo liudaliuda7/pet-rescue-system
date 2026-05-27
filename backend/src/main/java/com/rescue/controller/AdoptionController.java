@@ -65,7 +65,7 @@ public class AdoptionController {
         return Result.ok(res);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         Adoption r = mapper.selectById(id);
         if (r != null) enrich(java.util.Collections.singletonList(r));

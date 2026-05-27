@@ -34,7 +34,7 @@ public class StationController {
         return Result.ok(mapper.selectList(null));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         return Result.ok(mapper.selectById(id));
     }

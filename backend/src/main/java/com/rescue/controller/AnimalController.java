@@ -83,14 +83,14 @@ public class AnimalController {
         return Result.ok(res);
     }
 
-    @GetMapping("/public/{id}")
+    @GetMapping("/public/{id:\\d+}")
     public Result<?> publicGet(@PathVariable Long id) {
         Animal a = mapper.selectById(id);
         if (a != null) enrich(java.util.Collections.singletonList(a));
         return Result.ok(a);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         Animal a = mapper.selectById(id);
         if (a != null) enrich(java.util.Collections.singletonList(a));
