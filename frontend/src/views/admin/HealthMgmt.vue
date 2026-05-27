@@ -1,6 +1,10 @@
 <template>
   <div class="card">
-    <div class="page-header">健康档案管理</div>
+    <div class="page-header">
+      健康档案管理
+      <span v-if="$route.query.name" style="font-size:14px;color:#606266;font-weight:normal;"> — {{ $route.query.name }}</span>
+      <el-button v-if="$route.query.animalId" size="small" icon="el-icon-arrow-left" style="float:right;margin-top:2px;" @click="$router.back()">返回</el-button>
+    </div>
     <div class="toolbar">
       <el-select v-model="q.animalId" clearable filterable placeholder="按动物筛选" style="width:200px;" @change="load(1)">
         <el-option v-for="a in animals" :key="a.id" :label="a.name" :value="a.id"/>
@@ -50,6 +54,9 @@ export default {
     }
   },
   mounted() {
+    if (this.$route.query.animalId) {
+      this.q.animalId = Number(this.$route.query.animalId)
+    }
     animalApi.page({ current: 1, size: 500 }).then(r => { this.animals = r.data.records || [] })
     this.load()
   },

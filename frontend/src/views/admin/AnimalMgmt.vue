@@ -24,6 +24,13 @@
       <el-table-column prop="age" label="年龄" width="80"/>
       <el-table-column prop="stationName" label="救助站"/>
       <el-table-column prop="healthStatus" label="健康"/>
+      <el-table-column label="健康记录数" width="110" align="center">
+        <template slot-scope="s">
+          <el-button type="text" @click="viewHealth(s.row.id, s.row.name)">
+            {{ s.row.healthRecordCount || 0 }}
+          </el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template slot-scope="s"><el-tag size="mini" :type="s.row.status==='available'?'success':s.row.status==='adopted'?'info':'warning'">{{ statusText(s.row.status) }}</el-tag></template>
       </el-table-column>
@@ -98,6 +105,10 @@ export default {
         const fn = this.form.id ? animalApi.update : animalApi.add
         fn(this.form).then(() => { this.$message.success('已保存'); this.show = false; this.load() })
       })
+    },
+    viewHealth(animalId, name) {
+      const prefix = this.$route.path.startsWith('/station') ? '/station' : '/admin'
+      this.$router.push({ path: `${prefix}/health`, query: { animalId, name } })
     },
     del(row) {
       this.$confirm('确定删除？', '提示', { type: 'warning' }).then(() => animalApi.del(row.id).then(() => { this.$message.success('已删除'); this.load() })).catch(()=>{})

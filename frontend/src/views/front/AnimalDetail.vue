@@ -26,6 +26,25 @@
           </div>
         </el-col>
       </el-row>
+
+      <!-- 健康档案时间轴 -->
+      <div class="health-timeline">
+        <h3 style="margin-bottom:16px;">健康档案</h3>
+        <el-timeline v-if="healthRecords.length">
+          <el-timeline-item
+            v-for="record in healthRecords"
+            :key="record.id"
+            :timestamp="record.recordDate"
+            placement="top"
+            color="#409EFF">
+            <div class="record-card">
+              <p><strong>医生：</strong>{{ record.doctor }}</p>
+              <p>{{ record.content }}</p>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else-if="healthLoaded" description="暂无健康记录" :image-size="80"/>
+      </div>
     </div>
 
     <el-dialog title="领养申请" :visible.sync="show" width="500px">
@@ -43,12 +62,13 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi } from '@/api'
+import { animalApi, adoptionApi, healthApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
       a: null, loading: true, show: false, submitting: false,
+      healthRecords: [], healthLoaded: false,
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -59,7 +79,11 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    const id = this.$route.params.id
+    animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    healthApi.publicList(id).then(r => {
+      this.healthRecords = (r.data || []).reverse()
+    }).finally(() => { this.healthLoaded = true })
   },
   methods: {
     apply() {
@@ -85,3 +109,19 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.health-timeline {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid #EBEEF5;
+}
+.record-card {
+  background: #F5F7FA;
+  border-radius: 4px;
+  padding: 12px;
+}
+.record-card p {
+  margin: 4px 0;
+}
+</style>
