@@ -8,8 +8,10 @@ import com.rescue.entity.Animal;
 import com.rescue.entity.AnimalType;
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.User;
+import com.rescue.entity.HealthRecord;
 import com.rescue.mapper.AnimalMapper;
 import com.rescue.mapper.AnimalTypeMapper;
+import com.rescue.mapper.HealthRecordMapper;
 import com.rescue.mapper.RescueStationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class AnimalController {
     @Autowired private AnimalMapper mapper;
     @Autowired private AnimalTypeMapper typeMapper;
     @Autowired private RescueStationMapper stationMapper;
+    @Autowired private HealthRecordMapper healthRecordMapper;
 
     private void enrich(List<Animal> list) {
         if (list == null || list.isEmpty()) return;
@@ -35,6 +38,15 @@ public class AnimalController {
         for (Animal a : list) {
             if (a.getTypeId() != null) a.setTypeName(typeMap.get(a.getTypeId()));
             if (a.getStationId() != null) a.setStationName(stMap.get(a.getStationId()));
+        }
+        // 批量查询健康记录数
+        List<Long> animalIds = list.stream().map(Animal::getId).collect(Collectors.toList());
+        List<HealthRecord> records = healthRecordMapper.selectList(
+            new QueryWrapper<HealthRecord>().in("animal_id", animalIds));
+        Map<Long, Long> countMap = records.stream()
+            .collect(Collectors.groupingBy(HealthRecord::getAnimalId, Collectors.counting()));
+        for (Animal a : list) {
+            a.setHealthRecordCount(countMap.getOrDefault(a.getId(), 0L).intValue());
         }
     }
 
