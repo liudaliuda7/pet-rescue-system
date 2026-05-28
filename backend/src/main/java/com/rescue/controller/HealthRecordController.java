@@ -30,6 +30,48 @@ public class HealthRecordController {
             if (r.getAnimalId() != null) r.setAnimalName(animalMap.get(r.getAnimalId()));
     }
 
+    @GetMapping("/public/animal/{animalId}")
+    public Result<?> publicListByAnimal(@PathVariable Long animalId) {
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.eq("animal_id", animalId).orderByDesc("record_date");
+        List<HealthRecord> list = mapper.selectList(q);
+        return Result.ok(list);
+    }
+
+    @GetMapping("/animal/{animalId}")
+    public Result<?> listByAnimal(@PathVariable Long animalId) {
+        User cur = TokenStore.current();
+        if (cur != null && "station".equals(cur.getRole())) {
+            Animal animal = animalMapper.selectById(animalId);
+            if (animal == null || !cur.getStationId().equals(animal.getStationId())) {
+                return Result.ok(java.util.Collections.emptyList());
+            }
+        }
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.eq("animal_id", animalId).orderByDesc("record_date");
+        List<HealthRecord> list = mapper.selectList(q);
+        enrich(list);
+        return Result.ok(list);
+    }
+
+    @GetMapping("/count-by-animal")
+    public Result<?> countByAnimal() {
+        User cur = TokenStore.current();
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        if (cur != null && "station".equals(cur.getRole())) {
+            List<Long> ids = animalMapper.selectList(new QueryWrapper<Animal>().eq("station_id", cur.getStationId()))
+                .stream().map(Animal::getId).collect(Collectors.toList());
+            if (ids.isEmpty()) return Result.ok(new java.util.HashMap<>());
+            q.in("animal_id", ids);
+        }
+        q.select("animal_id", "count(*) as id");
+        q.groupBy("animal_id");
+        List<HealthRecord> counts = mapper.selectList(q);
+        Map<Long, Long> result = counts.stream()
+            .collect(Collectors.toMap(HealthRecord::getAnimalId, HealthRecord::getId, (a, b) -> a));
+        return Result.ok(result);
+    }
+
     @GetMapping("/page")
     public Result<?> page(@RequestParam(defaultValue = "1") int current,
                           @RequestParam(defaultValue = "10") int size,

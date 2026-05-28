@@ -26,6 +26,31 @@
           </div>
         </el-col>
       </el-row>
+
+      <div class="health-timeline" style="margin-top:30px;">
+        <h3 style="margin:0 0 16px; font-size:16px; font-weight:600;">
+          <i class="el-icon-first-aid-kit" style="margin-right:6px;"></i>健康档案
+        </h3>
+        <div v-if="healthLoading" v-loading="true" style="min-height:80px;"></div>
+        <el-empty v-else-if="!healthRecords.length" description="暂无健康记录" :image-size="60"/>
+        <el-timeline v-else>
+          <el-timeline-item
+            v-for="r in healthRecords"
+            :key="r.id"
+            :timestamp="r.recordDate"
+            placement="top"
+            type="primary"
+            :icon="'el-icon-date'"
+          >
+            <div class="health-card" style="background:#f9fafc; padding:12px 16px; border-radius:6px; border:1px solid #ebeef5;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-weight:600; color:#303133;">{{ r.content }}</span>
+                <el-tag size="mini" v-if="r.doctor">{{ r.doctor }}</el-tag>
+              </div>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
     </div>
 
     <el-dialog title="领养申请" :visible.sync="show" width="500px">
@@ -43,12 +68,12 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi } from '@/api'
+import { animalApi, adoptionApi, healthApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
-      a: null, loading: true, show: false, submitting: false,
+      a: null, loading: true, show: false, submitting: false, healthRecords: [], healthLoading: true,
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -59,7 +84,9 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    const id = this.$route.params.id
+    animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    healthApi.publicListByAnimal(id).then(r => { this.healthRecords = r.data || [] }).finally(() => { this.healthLoading = false })
   },
   methods: {
     apply() {
