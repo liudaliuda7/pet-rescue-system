@@ -51,9 +51,11 @@ public class HealthRecordController {
     }
 
     @GetMapping("/public/list")
-    public Result<?> publicList(@RequestParam Long animalId) {
+    public Result<?> publicList(@RequestParam String animalId) {
+        long aid;
+        try { aid = Long.parseLong(animalId); } catch (NumberFormatException e) { return Result.ok(java.util.Collections.emptyList()); }
         QueryWrapper<HealthRecord> q = new QueryWrapper<>();
-        q.eq("animal_id", animalId);
+        q.eq("animal_id", aid);
         q.orderByDesc("record_date");
         List<HealthRecord> list = mapper.selectList(q);
         enrich(list);

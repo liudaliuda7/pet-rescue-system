@@ -72,8 +72,10 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
-    healthApi.publicList({ animalId: this.$route.params.id }).then(r => { this.records = r.data || [] }).catch(() => {})
+    const id = Number(this.$route.params.id)
+    if (!id || isNaN(id)) { this.$router.replace('/animal'); return }
+    animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    healthApi.publicList({ animalId: id }).then(r => { this.records = r.data || [] }).catch(() => {})
   },
   methods: {
     apply() {
