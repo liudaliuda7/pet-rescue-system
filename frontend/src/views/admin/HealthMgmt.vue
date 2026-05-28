@@ -50,6 +50,8 @@ export default {
     }
   },
   mounted() {
+    const qAnimalId = this.$route.query.animalId
+    if (qAnimalId) this.q.animalId = Number(qAnimalId)
     animalApi.page({ current: 1, size: 500 }).then(r => { this.animals = r.data.records || [] })
     this.load()
   },

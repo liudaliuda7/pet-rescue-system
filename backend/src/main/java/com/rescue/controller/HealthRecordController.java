@@ -50,6 +50,18 @@ public class HealthRecordController {
         return Result.ok(res);
     }
 
+    @GetMapping("/public/list")
+    public Result<?> publicList(@RequestParam String animalId) {
+        long aid;
+        try { aid = Long.parseLong(animalId); } catch (NumberFormatException e) { return Result.ok(java.util.Collections.emptyList()); }
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.eq("animal_id", aid);
+        q.orderByDesc("record_date");
+        List<HealthRecord> list = mapper.selectList(q);
+        enrich(list);
+        return Result.ok(list);
+    }
+
     @PostMapping
     public Result<?> add(@RequestBody HealthRecord r) {
         mapper.insert(r);

@@ -6,10 +6,12 @@ import com.rescue.common.Result;
 import com.rescue.common.TokenStore;
 import com.rescue.entity.Animal;
 import com.rescue.entity.AnimalType;
+import com.rescue.entity.HealthRecord;
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.User;
 import com.rescue.mapper.AnimalMapper;
 import com.rescue.mapper.AnimalTypeMapper;
+import com.rescue.mapper.HealthRecordMapper;
 import com.rescue.mapper.RescueStationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class AnimalController {
     @Autowired private AnimalMapper mapper;
     @Autowired private AnimalTypeMapper typeMapper;
     @Autowired private RescueStationMapper stationMapper;
+    @Autowired private HealthRecordMapper healthRecordMapper;
 
     private void enrich(List<Animal> list) {
         if (list == null || list.isEmpty()) return;
@@ -32,9 +35,14 @@ public class AnimalController {
             .collect(Collectors.toMap(AnimalType::getId, AnimalType::getName, (a, b) -> a));
         Map<Long, String> stMap = stationMapper.selectList(null).stream()
             .collect(Collectors.toMap(RescueStation::getId, RescueStation::getName, (a, b) -> a));
+        List<Long> animalIds = list.stream().map(Animal::getId).collect(Collectors.toList());
+        Map<Long, Long> countMap = healthRecordMapper.selectList(
+            new QueryWrapper<HealthRecord>().in("animal_id", animalIds)
+        ).stream().collect(Collectors.groupingBy(HealthRecord::getAnimalId, Collectors.counting()));
         for (Animal a : list) {
             if (a.getTypeId() != null) a.setTypeName(typeMap.get(a.getTypeId()));
             if (a.getStationId() != null) a.setStationName(stMap.get(a.getStationId()));
+            a.setHealthRecordCount(countMap.getOrDefault(a.getId(), 0L).intValue());
         }
     }
 
@@ -75,14 +83,14 @@ public class AnimalController {
         return Result.ok(res);
     }
 
-    @GetMapping("/public/{id}")
+    @GetMapping("/public/{id:\\d+}")
     public Result<?> publicGet(@PathVariable Long id) {
         Animal a = mapper.selectById(id);
         if (a != null) enrich(java.util.Collections.singletonList(a));
         return Result.ok(a);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         Animal a = mapper.selectById(id);
         if (a != null) enrich(java.util.Collections.singletonList(a));

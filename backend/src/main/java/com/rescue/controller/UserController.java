@@ -29,7 +29,7 @@ public class UserController {
         return Result.ok(res);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         User u = userMapper.selectById(id);
         if (u != null) u.setPassword(null);

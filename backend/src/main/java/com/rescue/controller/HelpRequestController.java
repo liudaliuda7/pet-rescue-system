@@ -70,14 +70,14 @@ public class HelpRequestController {
         return Result.ok(res);
     }
 
-    @GetMapping("/public/{id}")
+    @GetMapping("/public/{id:\\d+}")
     public Result<?> publicGet(@PathVariable Long id) {
         HelpRequest r = mapper.selectById(id);
         if (r != null) enrich(java.util.Collections.singletonList(r));
         return Result.ok(r);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) {
         HelpRequest r = mapper.selectById(id);
         if (r != null) enrich(java.util.Collections.singletonList(r));

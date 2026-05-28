@@ -26,6 +26,19 @@
           </div>
         </el-col>
       </el-row>
+
+      <div style="margin-top:30px;">
+        <h3 style="margin:0 0 16px;">健康档案</h3>
+        <el-timeline v-if="records.length">
+          <el-timeline-item v-for="r in records" :key="r.id" :timestamp="r.recordDate" placement="top">
+            <el-card shadow="never" style="padding:4px 0;">
+              <div style="font-weight:600;">{{ r.doctor }}</div>
+              <div style="margin-top:6px;color:#606266;">{{ r.content }}</div>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else description="暂无健康记录" :image-size="80"/>
+      </div>
     </div>
 
     <el-dialog title="领养申请" :visible.sync="show" width="500px">
@@ -43,12 +56,12 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi } from '@/api'
+import { animalApi, adoptionApi, healthApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
-      a: null, loading: true, show: false, submitting: false,
+      a: null, loading: true, show: false, submitting: false, records: [],
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -59,7 +72,10 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    const id = Number(this.$route.params.id)
+    if (!id || isNaN(id)) { this.$router.replace('/animal'); return }
+    animalApi.publicGet(id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    healthApi.publicList({ animalId: id }).then(r => { this.records = r.data || [] }).catch(() => {})
   },
   methods: {
     apply() {

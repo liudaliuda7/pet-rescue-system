@@ -42,10 +42,10 @@ public class NoticeController {
         return Result.ok(mapper.selectList(q));
     }
 
-    @GetMapping("/public/{id}")
+    @GetMapping("/public/{id:\\d+}")
     public Result<?> publicGet(@PathVariable Long id) { return Result.ok(mapper.selectById(id)); }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<?> get(@PathVariable Long id) { return Result.ok(mapper.selectById(id)); }
 
     @PostMapping
