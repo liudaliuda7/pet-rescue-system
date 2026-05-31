@@ -13,6 +13,7 @@ frontend/.vite/
 .idea/
 *.iml
 .vscode/
+.trae/
 
 # macOS
 .DS_Store
