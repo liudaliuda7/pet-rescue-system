@@ -17,6 +17,11 @@
       <el-table-column prop="contact" label="联系" width="120"/>
       <el-table-column prop="address" label="地址"/>
       <el-table-column prop="reason" label="申请理由" show-overflow-tooltip/>
+      <el-table-column label="回访记录数" width="110">
+        <template slot-scope="s">
+          <el-button type="text" @click="goVisit(s.row)">{{ s.row.visitCount || 0 }} 条</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" width="90">
         <template slot-scope="s"><el-tag size="mini" :type="t(s.row.status)">{{ st(s.row.status) }}</el-tag></template>
       </el-table-column>
@@ -59,6 +64,10 @@ export default {
     save() { adoptionApi.audit(this.form).then(() => { this.$message.success('审核完成'); this.show = false; this.load() }) },
     del(row) {
       this.$confirm('确定删除？', '提示', { type: 'warning' }).then(() => adoptionApi.del(row.id).then(() => { this.$message.success('已删除'); this.load() })).catch(()=>{})
+    },
+    goVisit(row) {
+      const base = this.$route.path.startsWith('/station') ? '/station' : '/admin'
+      this.$router.push({ path: base + '/visit', query: { adoptionId: row.id } })
     }
   }
 }

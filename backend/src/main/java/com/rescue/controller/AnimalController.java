@@ -84,12 +84,14 @@ public class AnimalController {
     public Result<?> publicPage(@RequestParam(defaultValue = "1") int current,
                                 @RequestParam(defaultValue = "12") int size,
                                 @RequestParam(required = false) String name,
-                                @RequestParam(required = false) Long typeId) {
+                                @RequestParam(required = false) Long typeId,
+                                @RequestParam(required = false) Long stationId) {
         Page<Animal> p = new Page<>(current, size);
         QueryWrapper<Animal> q = new QueryWrapper<>();
         q.eq("status", "available");
         if (name != null && !name.isEmpty()) q.like("name", name);
         if (typeId != null) q.eq("type_id", typeId);
+        if (stationId != null) q.eq("station_id", stationId);
         q.orderByDesc("id");
         Page<Animal> res = mapper.selectPage(p, q);
         enrich(res.getRecords());

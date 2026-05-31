@@ -44,12 +44,18 @@ import { visitApi, adoptionApi } from '@/api'
 export default {
   data() {
     return {
-      q: { current: 1, size: 10 }, list: [], total: 0, show: false, adoptions: [],
+      q: { current: 1, size: 10, adoptionId: undefined }, list: [], total: 0, show: false, adoptions: [],
       form: { id: null, adoptionId: null, content: '', visitor: '', status: '良好' },
       rules: { adoptionId: [{ required: true, message: '请选择领养记录' }], content: [{ required: true, message: '请输入回访内容' }] }
     }
   },
-  mounted() { adoptionApi.page({ current: 1, size: 200, status: 'approved' }).then(r => { this.adoptions = r.data.records || [] }); this.load() },
+  mounted() {
+    adoptionApi.page({ current: 1, size: 200, status: 'approved' }).then(r => { this.adoptions = r.data.records || [] })
+    if (this.$route.query.adoptionId) {
+      this.q.adoptionId = Number(this.$route.query.adoptionId)
+    }
+    this.load()
+  },
   methods: {
     load(p) { if (p) this.q.current = p; visitApi.page(this.q).then(r => { this.list = r.data.records || []; this.total = r.data.total || 0 }) },
     open(row) { this.form = row ? { ...row } : { id: null, adoptionId: null, content: '', visitor: '', status: '良好' }; this.show = true; this.$nextTick(() => this.$refs.f && this.$refs.f.clearValidate()) },
