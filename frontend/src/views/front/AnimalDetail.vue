@@ -26,6 +26,29 @@
           </div>
         </el-col>
       </el-row>
+
+      <!-- 健康档案时间轴 -->
+      <div class="health-section">
+        <h3 class="section-title">健康档案</h3>
+        <el-timeline v-if="healthRecords.length > 0">
+          <el-timeline-item
+            v-for="record in healthRecords"
+            :key="record.id"
+            :timestamp="record.recordDate"
+            placement="top"
+            :type="record.recordDate && new Date(record.recordDate) > new Date(Date.now() - 30*24*60*60*1000) ? 'primary' : ''"
+          >
+            <div class="record-card">
+              <div class="record-header">
+                <span class="record-doctor"><i class="el-icon-user"></i> {{ record.doctor || '未知医生' }}</span>
+                <span class="record-date">{{ record.recordDate }}</span>
+              </div>
+              <div class="record-content">{{ record.content }}</div>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else description="暂无健康档案记录" :image-size="80"/>
+      </div>
     </div>
 
     <el-dialog title="领养申请" :visible.sync="show" width="500px">
@@ -43,12 +66,12 @@
 </template>
 
 <script>
-import { animalApi, adoptionApi } from '@/api'
+import { animalApi, adoptionApi, healthApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
     return {
-      a: null, loading: true, show: false, submitting: false,
+      a: null, loading: true, show: false, submitting: false, healthRecords: [],
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -59,7 +82,14 @@ export default {
     }
   },
   mounted() {
-    animalApi.publicGet(this.$route.params.id).then(r => { this.a = r.data }).finally(() => { this.loading = false })
+    animalApi.publicGet(this.$route.params.id).then(r => {
+      this.a = r.data
+      if (this.a) {
+        healthApi.publicList({ animalId: this.a.id }).then(hr => {
+          this.healthRecords = hr.data || []
+        })
+      }
+    }).finally(() => { this.loading = false })
   },
   methods: {
     apply() {
@@ -85,3 +115,43 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.health-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #303133;
+}
+.record-card {
+  background: #f5f7fa;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.record-doctor {
+  color: #409EFF;
+  font-weight: 500;
+}
+.record-doctor i {
+  margin-right: 4px;
+}
+.record-date {
+  color: #909399;
+  font-size: 13px;
+}
+.record-content {
+  color: #606266;
+  line-height: 1.6;
+}
+</style>

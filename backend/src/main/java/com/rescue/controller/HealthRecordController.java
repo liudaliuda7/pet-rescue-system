@@ -50,6 +50,15 @@ public class HealthRecordController {
         return Result.ok(res);
     }
 
+    @GetMapping("/public/list")
+    public Result<?> publicList(@RequestParam Long animalId) {
+        QueryWrapper<HealthRecord> q = new QueryWrapper<>();
+        q.eq("animal_id", animalId);
+        q.orderByDesc("record_date").orderByDesc("id");
+        List<HealthRecord> list = mapper.selectList(q);
+        return Result.ok(list);
+    }
+
     @PostMapping
     public Result<?> add(@RequestBody HealthRecord r) {
         mapper.insert(r);
