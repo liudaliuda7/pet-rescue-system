@@ -49,6 +49,6 @@ export const noticeApi = {
   publicGet: id => request.get('/notice/public/' + id),
   latest: () => request.get('/notice/public/latest')
 }
-export const statsApi = { dashboard: () => request.get('/stats/dashboard') }
+export const statsApi = { dashboard: () => request.get('/stats/dashboard'), station: id => request.get('/stats/station/' + id) }
 export const systemApi = { info: () => request.get('/system/info') }
 export const uploadUrl = '/api/upload'

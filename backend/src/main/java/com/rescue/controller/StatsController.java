@@ -44,4 +44,14 @@ public class StatsController {
         }
         return Result.ok(m);
     }
+
+    @GetMapping("/station/{stationId}")
+    public Result<?> stationStats(@PathVariable Long stationId) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("animalTotal", animalMapper.selectCount(new QueryWrapper<Animal>().eq("station_id", stationId)));
+        m.put("animalAvailable", animalMapper.selectCount(new QueryWrapper<Animal>().eq("station_id", stationId).eq("status", "available")));
+        m.put("animalAdopted", animalMapper.selectCount(new QueryWrapper<Animal>().eq("station_id", stationId).eq("status", "adopted")));
+        m.put("helpTotal", helpMapper.selectCount(new QueryWrapper<HelpRequest>().eq("station_id", stationId)));
+        return Result.ok(m);
+    }
 }

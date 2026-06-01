@@ -30,5 +30,7 @@ public class Adoption {
     @TableField(exist = false)
     private Long stationId;
     @TableField(exist = false)
+    private String stationName;
+    @TableField(exist = false)
     private Integer visitCount;
 }

@@ -7,13 +7,16 @@
       <span class="spacer"/>
       <el-button type="success" icon="el-icon-plus" @click="open()">新增</el-button>
     </div>
-    <el-table :data="list" border>
+    <el-table :data="list" border @sort-change="handleSort">
       <el-table-column prop="id" label="ID" width="60"/>
       <el-table-column prop="name" label="名称"/>
       <el-table-column prop="contact" label="联系人" width="120"/>
       <el-table-column prop="phone" label="电话" width="140"/>
       <el-table-column prop="address" label="地址"/>
-      <el-table-column prop="description" label="简介" show-overflow-tooltip/>
+      <el-table-column prop="animalTotal" label="累计救助" width="100" sortable="custom"/>
+      <el-table-column prop="animalAvailable" label="待领养" width="90" sortable="custom"/>
+      <el-table-column prop="adoptedTotal" label="领养成功" width="100" sortable="custom"/>
+      <el-table-column prop="helpTotal" label="处理求助" width="100" sortable="custom"/>
       <el-table-column label="操作" width="180">
         <template slot-scope="s">
           <el-button size="mini" @click="open(s.row)">编辑</el-button>
@@ -41,7 +44,7 @@ import { stationApi } from '@/api'
 export default {
   data() {
     return {
-      q: { current: 1, size: 10, name: '' },
+      q: { current: 1, size: 10, name: '', sortField: '', sortOrder: '' },
       list: [], total: 0, show: false,
       form: { id: null, name: '', contact: '', phone: '', address: '', description: '' },
       rules: { name: [{ required: true, message: '请输入名称' }] }
@@ -49,7 +52,15 @@ export default {
   },
   mounted() { this.load() },
   methods: {
-    load(p) { if (p) this.q.current = p; stationApi.page(this.q).then(r => { this.list = r.data.records || []; this.total = r.data.total || 0 }) },
+    load(p) {
+      if (p) this.q.current = p
+      stationApi.page(this.q).then(r => { this.list = r.data.records || []; this.total = r.data.total || 0 })
+    },
+    handleSort({ prop, order }) {
+      this.q.sortField = order ? prop : ''
+      this.q.sortOrder = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : ''
+      this.load(1)
+    },
     open(row) {
       this.form = row ? { ...row } : { id: null, name: '', contact: '', phone: '', address: '', description: '' }
       this.show = true; this.$nextTick(() => this.$refs.f && this.$refs.f.clearValidate())

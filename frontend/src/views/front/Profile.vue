@@ -41,6 +41,12 @@
             <el-table-column label="封面" width="90">
               <template slot-scope="s"><img v-if="s.row.animalImage" :src="s.row.animalImage" class="thumb"/></template>
             </el-table-column>
+            <el-table-column label="救助站" width="140">
+              <template slot-scope="s">
+                <a v-if="s.row.stationId" class="station-link" @click="$router.push('/station/' + s.row.stationId)">{{ s.row.stationName || '—' }}</a>
+                <span v-else>—</span>
+              </template>
+            </el-table-column>
             <el-table-column prop="reason" label="申请理由" show-overflow-tooltip/>
             <el-table-column label="状态" width="100">
               <template slot-scope="s">
@@ -101,3 +107,13 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.station-link {
+  color: #409eff;
+  cursor: pointer;
+}
+.station-link:hover {
+  text-decoration: underline;
+}
+</style>

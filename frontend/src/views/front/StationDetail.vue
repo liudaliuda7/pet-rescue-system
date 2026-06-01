@@ -1,6 +1,25 @@
 <template>
   <div class="card" v-loading="loading">
     <div v-if="station">
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.animalTotal || 0 }}</div>
+          <div class="stat-label">累计救助动物</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.animalAvailable || 0 }}</div>
+          <div class="stat-label">当前待领养</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.animalAdopted || 0 }}</div>
+          <div class="stat-label">累计领养成功</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.helpTotal || 0 }}</div>
+          <div class="stat-label">累计处理求助</div>
+        </div>
+      </div>
+
       <div class="station-info">
         <div class="station-header">
           <img :src="station.image || placeholder" class="station-img"/>
@@ -43,11 +62,12 @@
 </template>
 
 <script>
-import { stationApi, animalApi } from '@/api'
+import { stationApi, animalApi, statsApi } from '@/api'
 export default {
   data() {
     return {
       station: null, loading: true, animals: [], total: 0,
+      stats: {},
       q: { current: 1, size: 12 },
       placeholder: 'https://via.placeholder.com/200x200/cccccc/666666?text=Station',
       animalPlaceholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
@@ -57,7 +77,10 @@ export default {
     const id = this.$route.params.id
     stationApi.publicGet(id).then(r => {
       this.station = r.data
-      if (this.station) this.loadAnimals()
+      if (this.station) {
+        this.loadAnimals()
+        this.loadStats()
+      }
     }).finally(() => { this.loading = false })
   },
   methods: {
@@ -66,12 +89,39 @@ export default {
         this.animals = r.data.records || []
         this.total = r.data.total || 0
       })
+    },
+    loadStats() {
+      statsApi.station(this.$route.params.id).then(r => {
+        this.stats = r.data || {}
+      })
     }
   }
 }
 </script>
 
 <style scoped>
+.stats-cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  flex: 1;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #409eff;
+}
+.stat-label {
+  font-size: 13px;
+  color: #606266;
+  margin-top: 6px;
+}
 .station-header {
   display: flex;
   gap: 24px;
