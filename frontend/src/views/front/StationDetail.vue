@@ -1,9 +1,16 @@
 <template>
   <div class="card" v-loading="loading">
-    <div v-if="station">
+    <div v-if="notFound" style="text-align:center;padding:60px 0;">
+      <el-result icon="warning" title="救助站不存在" sub-title="您访问的救助站不存在或已被删除">
+        <template slot="extra">
+          <el-button type="primary" @click="$router.back()">返回上一页</el-button>
+        </template>
+      </el-result>
+    </div>
+    <div v-else-if="station">
       <el-row :gutter="30">
         <el-col :span="8">
-          <img :src="station.image || placeholder" style="width:100%;border-radius:6px;"/>
+          <img :src="stationImage" style="width:100%;border-radius:6px;"/>
         </el-col>
         <el-col :span="16">
           <h2 style="margin:0 0 10px;">{{ station.name }}</h2>
@@ -28,7 +35,7 @@
               <div style="padding:12px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                   <span style="font-weight:600;">{{ a.name }}</span>
-                  <el-tag size="mini" type="success">待领养</el-tag>
+                  <el-tag size="mini" :type="statusType(a.status)">{{ statusLabel(a.status) }}</el-tag>
                 </div>
                 <div style="color:#909399;font-size:12px;margin-top:6px;">{{ a.typeName }} · {{ a.gender }} · {{ a.age }}</div>
               </div>
@@ -47,20 +54,33 @@ import { stationApi, animalApi } from '@/api'
 export default {
   data() {
     return {
-      station: null, loading: true, animals: [], total: 0,
+      station: null, loading: true, notFound: false, animals: [], total: 0,
       q: { current: 1, size: 12 },
       placeholder: 'https://via.placeholder.com/400x300/cccccc/666666?text=No+Image',
       animalPlaceholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
     }
   },
+  computed: {
+    stationImage() {
+      return (this.station && this.station.image && this.station.image.trim()) ? this.station.image : this.placeholder
+    }
+  },
   mounted() {
     const id = this.$route.params.id
     stationApi.publicGet(id).then(r => {
-      this.station = r.data
+      if (!r.data) {
+        this.notFound = true
+      } else {
+        this.station = r.data
+        this.loadAnimals()
+      }
+    }).catch(() => {
+      this.notFound = true
     }).finally(() => { this.loading = false })
-    this.loadAnimals()
   },
   methods: {
+    statusType(s) { return { available: 'success', adopted: 'info', treatment: 'warning' }[s] || '' },
+    statusLabel(s) { return { available: '待领养', adopted: '已领养', treatment: '治疗中' }[s] || s || '未知' },
     loadAnimals() {
       animalApi.publicPage({ ...this.q, stationId: this.$route.params.id }).then(r => {
         this.animals = r.data.records || []
