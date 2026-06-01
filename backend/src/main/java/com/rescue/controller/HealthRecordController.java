@@ -24,10 +24,17 @@ public class HealthRecordController {
 
     private void enrich(List<HealthRecord> list) {
         if (list == null || list.isEmpty()) return;
-        Map<Long, String> animalMap = animalMapper.selectList(null).stream()
-            .collect(Collectors.toMap(Animal::getId, Animal::getName, (a, b) -> a));
-        for (HealthRecord r : list)
-            if (r.getAnimalId() != null) r.setAnimalName(animalMap.get(r.getAnimalId()));
+        Map<Long, Animal> animalMap = animalMapper.selectList(null).stream()
+            .collect(Collectors.toMap(Animal::getId, a -> a, (a, b) -> a));
+        for (HealthRecord r : list) {
+            if (r.getAnimalId() != null) {
+                Animal a = animalMap.get(r.getAnimalId());
+                if (a != null) {
+                    r.setAnimalName(a.getName());
+                    r.setAnimalStatus(a.getStatus());
+                }
+            }
+        }
     }
 
     @GetMapping("/page")

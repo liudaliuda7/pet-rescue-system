@@ -20,12 +20,13 @@ export const userApi = {
   updateProfile: d => request.put('/user/profile', d),
   changePassword: d => request.put('/user/password', d)
 }
-export const stationApi = { ...crud('/station'), list: () => request.get('/station/list'), publicList: () => request.get('/station/public/list') }
+export const stationApi = { ...crud('/station'), list: () => request.get('/station/list'), publicList: () => request.get('/station/public/list'), publicGet: id => request.get('/station/public/' + id) }
 export const animalTypeApi = { ...crud('/animal-type'), list: () => request.get('/animal-type/list'), publicList: () => request.get('/animal-type/public/list') }
 export const animalApi = {
   ...crud('/animal'),
   publicPage: p => request.get('/animal/public/page', { params: p }),
   publicGet: id => request.get('/animal/public/' + id),
+  publicByStation: p => request.get('/animal/public/station/' + p.stationId, { params: { current: p.current, size: p.size } }),
   stats: () => request.get('/animal/stats')
 }
 export const helpApi = {
@@ -37,7 +38,7 @@ export const helpApi = {
 }
 export const helpRecordApi = crud('/help-record')
 export const adoptionApi = { ...crud('/adoption'), audit: d => request.put('/adoption/audit', d) }
-export const visitApi = crud('/visit')
+export const visitApi = { ...crud('/visit'), countByAdoption: adoptionId => request.get('/visit/count', { params: { adoptionId } }) }
 export const healthApi = {
   ...crud('/health'),
   publicList: p => request.get('/health/public/list', { params: p })

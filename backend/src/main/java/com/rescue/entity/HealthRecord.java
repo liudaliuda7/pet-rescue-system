@@ -22,4 +22,6 @@ public class HealthRecord {
 
     @TableField(exist = false)
     private String animalName;
+    @TableField(exist = false)
+    private String animalStatus;
 }

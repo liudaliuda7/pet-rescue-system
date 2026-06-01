@@ -17,7 +17,10 @@
             <el-descriptions-item label="年龄">{{ a.age }}</el-descriptions-item>
             <el-descriptions-item label="毛色">{{ a.color }}</el-descriptions-item>
             <el-descriptions-item label="健康">{{ a.healthStatus }}</el-descriptions-item>
-            <el-descriptions-item label="所属救助站">{{ a.stationName || '未指派' }}</el-descriptions-item>
+            <el-descriptions-item label="所属救助站">
+              <router-link v-if="a.stationId" :to="'/station/' + a.stationId" style="color:#409EFF;text-decoration:none;">{{ a.stationName || '未知救助站' }}</router-link>
+              <span v-else>未指派</span>
+            </el-descriptions-item>
             <el-descriptions-item label="描述">{{ a.description }}</el-descriptions-item>
           </el-descriptions>
           <div style="margin-top:20px;">

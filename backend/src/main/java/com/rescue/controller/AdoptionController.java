@@ -10,6 +10,7 @@ import com.rescue.entity.User;
 import com.rescue.mapper.AdoptionMapper;
 import com.rescue.mapper.AnimalMapper;
 import com.rescue.mapper.UserMapper;
+import com.rescue.mapper.VisitRecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,12 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.rescue.entity.VisitRecord;
+
 @RestController
 @RequestMapping("/adoption")
 public class AdoptionController {
     @Autowired private AdoptionMapper mapper;
     @Autowired private AnimalMapper animalMapper;
     @Autowired private UserMapper userMapper;
+    @Autowired private VisitRecordMapper visitRecordMapper;
 
     private void enrich(List<Adoption> list) {
         if (list == null || list.isEmpty()) return;
@@ -30,6 +34,13 @@ public class AdoptionController {
             .collect(Collectors.toMap(Animal::getId, a -> a, (a, b) -> a));
         Map<Long, String> userMap = userMapper.selectList(null).stream()
             .collect(Collectors.toMap(User::getId, u -> u.getName() != null ? u.getName() : u.getUsername(), (a, b) -> a));
+        QueryWrapper<VisitRecord> vcq = new QueryWrapper<>();
+        vcq.select("adoption_id", "count(*) as cnt").groupBy("adoption_id");
+        Map<Long, Integer> visitCountMap = visitRecordMapper.selectMaps(vcq).stream()
+            .collect(Collectors.toMap(
+                m -> ((Number) (m.get("adoption_id") != null ? m.get("adoption_id") : m.get("ADOPTION_ID"))).longValue(),
+                m -> ((Number) (m.get("cnt") != null ? m.get("cnt") : m.get("CNT"))).intValue(),
+                (a, b) -> a));
         for (Adoption r : list) {
             Animal a = r.getAnimalId() == null ? null : animalMap.get(r.getAnimalId());
             if (a != null) {
@@ -38,6 +49,7 @@ public class AdoptionController {
                 r.setStationId(a.getStationId());
             }
             if (r.getUserId() != null) r.setUserName(userMap.get(r.getUserId()));
+            r.setVisitCount(visitCountMap.getOrDefault(r.getId(), 0));
         }
     }
 

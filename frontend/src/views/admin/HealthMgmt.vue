@@ -12,6 +12,11 @@
     <el-table :data="list" border>
       <el-table-column prop="id" label="ID" width="60"/>
       <el-table-column prop="animalName" label="动物" width="120"/>
+      <el-table-column label="动物状态" width="100">
+        <template slot-scope="s">
+          <el-tag size="mini" :type="statusType(s.row.animalStatus)">{{ statusText(s.row.animalStatus) }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="doctor" label="医生" width="120"/>
       <el-table-column prop="recordDate" label="就诊日期" width="120"/>
       <el-table-column prop="content" label="健康内容" show-overflow-tooltip/>
@@ -57,6 +62,8 @@ export default {
     this.load()
   },
   methods: {
+    statusText(s) { return { available: '待领养', adopted: '已领养', treatment: '治疗中' }[s] || '未知' },
+    statusType(s) { return { available: 'success', adopted: 'info', treatment: 'warning' }[s] || '' },
     load(p) { if (p) this.q.current = p; healthApi.page(this.q).then(r => { this.list = r.data.records || []; this.total = r.data.total || 0 }) },
     open(row) { this.form = row ? { ...row } : { id: null, animalId: null, content: '', doctor: '', recordDate: null }; this.show = true; this.$nextTick(() => this.$refs.f && this.$refs.f.clearValidate()) },
     save() {

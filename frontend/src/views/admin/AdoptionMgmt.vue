@@ -21,6 +21,11 @@
         <template slot-scope="s"><el-tag size="mini" :type="t(s.row.status)">{{ st(s.row.status) }}</el-tag></template>
       </el-table-column>
       <el-table-column prop="createTime" label="时间" width="170"/>
+      <el-table-column label="回访记录" width="110" align="center">
+        <template slot-scope="s">
+          <el-button size="mini" type="text" @click="showVisits(s.row)">{{ s.row.visitCount || 0 }} 条</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200">
         <template slot-scope="s">
           <el-button size="mini" type="primary" @click="open(s.row)" v-if="s.row.status==='pending'">审核</el-button>
@@ -37,17 +42,29 @@
       </el-form>
       <span slot="footer"><el-button @click="show=false">取消</el-button><el-button type="primary" @click="save">提交</el-button></span>
     </el-dialog>
+
+    <el-dialog title="回访记录" :visible.sync="visitShow" width="650px">
+      <el-table :data="visitList" border v-loading="visitLoading">
+        <el-table-column prop="id" label="ID" width="60"/>
+        <el-table-column prop="visitor" label="回访人" width="100"/>
+        <el-table-column prop="content" label="回访内容" show-overflow-tooltip/>
+        <el-table-column prop="status" label="状态" width="90"/>
+        <el-table-column prop="createTime" label="时间" width="170"/>
+      </el-table>
+      <el-empty v-if="!visitLoading && visitList.length===0" description="暂无回访记录" :image-size="60"/>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { adoptionApi } from '@/api'
+import { adoptionApi, visitApi } from '@/api'
 export default {
   data() {
     return {
       q: { current: 1, size: 10, status: '' },
       list: [], total: 0, show: false,
-      form: { id: null, status: 'approved', remark: '' }
+      form: { id: null, status: 'approved', remark: '' },
+      visitShow: false, visitList: [], visitLoading: false
     }
   },
   mounted() { this.load() },
@@ -59,6 +76,14 @@ export default {
     save() { adoptionApi.audit(this.form).then(() => { this.$message.success('审核完成'); this.show = false; this.load() }) },
     del(row) {
       this.$confirm('确定删除？', '提示', { type: 'warning' }).then(() => adoptionApi.del(row.id).then(() => { this.$message.success('已删除'); this.load() })).catch(()=>{})
+    },
+    showVisits(row) {
+      this.visitShow = true
+      this.visitLoading = true
+      this.visitList = []
+      visitApi.page({ current: 1, size: 100, adoptionId: row.id }).then(r => {
+        this.visitList = r.data.records || []
+      }).finally(() => { this.visitLoading = false })
     }
   }
 }

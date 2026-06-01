@@ -96,6 +96,18 @@ public class AnimalController {
         return Result.ok(res);
     }
 
+    @GetMapping("/public/station/{stationId}")
+    public Result<?> publicByStation(@PathVariable Long stationId,
+                                     @RequestParam(defaultValue = "1") int current,
+                                     @RequestParam(defaultValue = "12") int size) {
+        Page<Animal> p = new Page<>(current, size);
+        QueryWrapper<Animal> q = new QueryWrapper<>();
+        q.eq("station_id", stationId).eq("status", "available").orderByDesc("id");
+        Page<Animal> res = mapper.selectPage(p, q);
+        enrich(res.getRecords());
+        return Result.ok(res);
+    }
+
     @GetMapping("/public/{id}")
     public Result<?> publicGet(@PathVariable Long id) {
         Animal a = mapper.selectById(id);

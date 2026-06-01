@@ -14,6 +14,7 @@ const routes = [
       { path: 'help/submit', name: 'help-submit', component: () => import('@/views/front/HelpSubmit.vue'), meta: { auth: true } },
       { path: 'animal', name: 'animal', component: () => import('@/views/front/AnimalList.vue') },
       { path: 'animal/:id', name: 'animal-detail', component: () => import('@/views/front/AnimalDetail.vue') },
+      { path: 'station/:id', name: 'station-detail', component: () => import('@/views/front/StationDetail.vue') },
       { path: 'notice', name: 'notice', component: () => import('@/views/front/NoticeList.vue') },
       { path: 'notice/:id', name: 'notice-detail', component: () => import('@/views/front/NoticeDetail.vue') },
       { path: 'profile', name: 'profile', component: () => import('@/views/front/Profile.vue'), meta: { auth: true } }

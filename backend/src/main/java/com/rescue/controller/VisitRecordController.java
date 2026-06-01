@@ -44,6 +44,13 @@ public class VisitRecordController {
         }
     }
 
+    @GetMapping("/count")
+    public Result<?> countByAdoption(@RequestParam Long adoptionId) {
+        QueryWrapper<VisitRecord> q = new QueryWrapper<>();
+        q.eq("adoption_id", adoptionId);
+        return Result.ok(mapper.selectCount(q));
+    }
+
     @GetMapping("/page")
     public Result<?> page(@RequestParam(defaultValue = "1") int current,
                           @RequestParam(defaultValue = "10") int size,
