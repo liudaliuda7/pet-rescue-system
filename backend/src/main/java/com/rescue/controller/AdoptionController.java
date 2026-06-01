@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.rescue.entity.RescueStation;
+import com.rescue.entity.VisitRecord;
 
 @RestController
 @RequestMapping("/adoption")
