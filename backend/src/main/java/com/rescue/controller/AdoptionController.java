@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.VisitRecord;
 import com.rescue.entity.HealthRecord;
+import com.rescue.entity.Message;
+import com.rescue.mapper.MessageMapper;
 
 @RestController
 @RequestMapping("/adoption")
@@ -33,6 +35,7 @@ public class AdoptionController {
     @Autowired private UserMapper userMapper;
     @Autowired private VisitRecordMapper visitRecordMapper;
     @Autowired private HealthRecordMapper healthRecordMapper;
+    @Autowired private MessageMapper messageMapper;
 
     private void enrich(List<Adoption> list) {
         if (list == null || list.isEmpty()) return;
@@ -112,6 +115,16 @@ public class AdoptionController {
         return Result.ok(r);
     }
 
+    @GetMapping("/my")
+    public Result<?> myByAnimal(@RequestParam Long animalId) {
+        User cur = TokenStore.current();
+        if (cur == null) return Result.ok(null);
+        QueryWrapper<Adoption> q = new QueryWrapper<>();
+        q.eq("animal_id", animalId).eq("user_id", cur.getId()).orderByDesc("id").last("limit 1");
+        Adoption r = mapper.selectOne(q);
+        return Result.ok(r);
+    }
+
     @PostMapping
     public Result<?> add(@RequestBody Adoption r) {
         User cur = TokenStore.current();
@@ -125,12 +138,31 @@ public class AdoptionController {
     public Result<?> audit(@RequestBody Adoption r) {
         Adoption db = mapper.selectById(r.getId());
         if (db == null) return Result.error("记录不存在");
+        if (!"pending".equals(db.getStatus())) return Result.error("只有待审核状态的申请才能审核");
         db.setStatus(r.getStatus());
         db.setRemark(r.getRemark());
         mapper.updateById(db);
         if ("approved".equals(r.getStatus()) && db.getAnimalId() != null) {
             Animal a = animalMapper.selectById(db.getAnimalId());
             if (a != null) { a.setStatus("adopted"); animalMapper.updateById(a); }
+        }
+        // 发送消息通知用户
+        if (db.getUserId() != null) {
+            Message msg = new Message();
+            msg.setUserId(db.getUserId());
+            msg.setIsRead(0);
+            if ("approved".equals(r.getStatus())) {
+                Animal a = db.getAnimalId() != null ? animalMapper.selectById(db.getAnimalId()) : null;
+                String animalName = a != null ? a.getName() : "动物";
+                msg.setTitle("领养申请已通过");
+                msg.setContent("恭喜！您对「" + animalName + "」的领养申请已通过审核。" + (r.getRemark() != null ? "备注：" + r.getRemark() : ""));
+            } else {
+                Animal a = db.getAnimalId() != null ? animalMapper.selectById(db.getAnimalId()) : null;
+                String animalName = a != null ? a.getName() : "动物";
+                msg.setTitle("领养申请未通过");
+                msg.setContent("很遗憾，您对「" + animalName + "」的领养申请未通过审核。" + (r.getRemark() != null ? "原因：" + r.getRemark() : ""));
+            }
+            messageMapper.insert(msg);
         }
         return Result.ok("审核完成");
     }

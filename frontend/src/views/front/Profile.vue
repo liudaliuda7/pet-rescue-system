@@ -64,8 +64,9 @@
               </template>
             </el-table-column>
             <el-table-column prop="createTime" label="申请时间" width="180"/>
-            <el-table-column label="操作" width="100">
+            <el-table-column label="操作" width="160">
               <template slot-scope="s">
+                <el-button size="mini" type="warning" @click="openTrack(s.row)">流程跟踪</el-button>
                 <el-button v-if="s.row.status==='approved' && !reviewedStations[s.row.stationId]" size="mini" type="primary" @click="openReview(s.row)">评价</el-button>
                 <el-tag v-else-if="s.row.status==='approved' && reviewedStations[s.row.stationId]" size="mini" type="info">已评价</el-tag>
               </template>
@@ -86,6 +87,33 @@
             <el-button @click="reviewShow=false">取消</el-button>
             <el-button type="primary" :loading="reviewLoading" @click="submitReview">提交</el-button>
           </span>
+        </el-dialog>
+
+        <el-dialog title="领养流程跟踪" :visible.sync="trackShow" width="600px">
+          <div v-if="trackRow" style="padding: 20px 0;">
+            <div style="margin-bottom: 16px; text-align: center; color: #606266;">
+              <span style="font-weight:600;">{{ trackRow.animalName }}</span>
+              <el-tag size="mini" :type="adoptType(trackRow.status)" style="margin-left:8px;">{{ adoptTxt(trackRow.status) }}</el-tag>
+            </div>
+            <el-steps :active="getTrackStep(trackRow)" :process-status="trackRow.status === 'rejected' ? 'error' : 'process'" finish-status="success" align-center>
+              <el-step title="浏览动物" icon="el-icon-view"></el-step>
+              <el-step title="提交申请" icon="el-icon-edit-outline"></el-step>
+              <el-step title="等待审核" icon="el-icon-time"></el-step>
+              <el-step :title="trackRow.status === 'rejected' ? '审核未通过' : '审核通过'" :icon="trackRow.status === 'rejected' ? 'el-icon-close' : 'el-icon-check'"></el-step>
+              <el-step title="完成领养" icon="el-icon-trophy"></el-step>
+            </el-steps>
+            <div style="margin-top: 20px; text-align: center;">
+              <el-alert
+                :title="getTrackTip(trackRow)"
+                :type="adoptAlertType(trackRow.status)"
+                show-icon
+                :closable="false"
+              />
+            </div>
+            <div v-if="trackRow.remark" style="margin-top: 12px; color: #909399; text-align: center;">
+              备注：{{ trackRow.remark }}
+            </div>
+          </div>
         </el-dialog>
       </el-tab-pane>
     </el-tabs>
@@ -112,7 +140,8 @@ export default {
         rating: [{ required: true, message: '请选择评分' }],
         content: [{ required: true, message: '请输入评价内容' }]
       },
-      reviewedStations: {}
+      reviewedStations: {},
+      trackShow: false, trackRow: null
     }
   },
   watch: {
@@ -156,6 +185,27 @@ export default {
       this.reviewForm = { rating: 5, content: '', adoptionId: row.id }
       this.reviewShow = true
       this.$nextTick(() => this.$refs.rf && this.$refs.rf.clearValidate())
+    },
+    openTrack(row) {
+      this.trackRow = row
+      this.trackShow = true
+    },
+    getTrackStep(row) {
+      if (!row) return 0
+      if (row.status === 'pending') return 2
+      if (row.status === 'approved') return 4
+      if (row.status === 'rejected') return 3
+      return 1
+    },
+    getTrackTip(row) {
+      if (!row) return ''
+      if (row.status === 'pending') return '您的领养申请已提交，正在等待审核...'
+      if (row.status === 'approved') return '恭喜！您的领养申请已通过，领养完成！'
+      if (row.status === 'rejected') return '很遗憾，您的领养申请未通过审核。'
+      return ''
+    },
+    adoptAlertType(s) {
+      return { pending: 'warning', approved: 'success', rejected: 'error' }[s] || 'info'
     },
     submitReview() {
       this.$refs.rf.validate(ok => {

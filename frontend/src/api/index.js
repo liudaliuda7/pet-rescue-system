@@ -37,7 +37,8 @@ export const helpApi = {
   stats: () => request.get('/help/stats')
 }
 export const helpRecordApi = crud('/help-record')
-export const adoptionApi = { ...crud('/adoption'), audit: d => request.put('/adoption/audit', d) }
+export const adoptionApi = { ...crud('/adoption'), audit: d => request.put('/adoption/audit', d), my: p => request.get('/adoption/my', { params: p }) }
+export const messageApi = { page: p => request.get('/message/page', { params: p }), unread: () => request.get('/message/unread'), read: id => request.put('/message/read/' + id), readAll: () => request.put('/message/readAll') }
 export const visitApi = { ...crud('/visit'), countByAdoption: adoptionId => request.get('/visit/count', { params: { adoptionId } }) }
 export const healthApi = {
   ...crud('/health'),

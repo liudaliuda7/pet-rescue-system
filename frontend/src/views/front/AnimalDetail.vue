@@ -30,6 +30,26 @@
         </el-col>
       </el-row>
 
+      <!-- 领养流程 -->
+      <div class="process-section">
+        <h3 class="section-title">领养流程</h3>
+        <el-steps :active="adoptionStep" :process-status="adoptionProcessStatus" finish-status="success" align-center>
+          <el-step title="浏览动物" icon="el-icon-view"></el-step>
+          <el-step title="提交申请" icon="el-icon-edit-outline"></el-step>
+          <el-step title="等待审核" icon="el-icon-time"></el-step>
+          <el-step :title="myAdoption && myAdoption.status === 'rejected' ? '审核未通过' : '审核通过'" :icon="myAdoption && myAdoption.status === 'rejected' ? 'el-icon-close' : 'el-icon-check'"></el-step>
+          <el-step title="完成领养" icon="el-icon-trophy"></el-step>
+        </el-steps>
+        <div v-if="myAdoption" class="adoption-status-tip">
+          <el-alert
+            :title="adoptionStatusText"
+            :type="adoptionAlertType"
+            show-icon
+            :closable="false"
+          />
+        </div>
+      </div>
+
       <!-- 健康档案时间轴 -->
       <div class="health-section">
         <h3 class="section-title">健康档案</h3>
@@ -75,6 +95,7 @@ export default {
   data() {
     return {
       a: null, loading: true, show: false, submitting: false, healthRecords: [],
+      myAdoption: null,
       form: { animalId: null, contact: '', address: '', reason: '' },
       rules: {
         contact: [{ required: true, message: '请填写联系电话' }],
@@ -84,6 +105,36 @@ export default {
       placeholder: 'https://via.placeholder.com/600x400/cccccc/666666?text=No+Image'
     }
   },
+  computed: {
+    adoptionStep() {
+      if (!this.myAdoption) return 0
+      const s = this.myAdoption.status
+      if (s === 'pending') return 2
+      if (s === 'approved') return 4
+      if (s === 'rejected') return 3
+      return 1
+    },
+    adoptionProcessStatus() {
+      if (this.myAdoption && this.myAdoption.status === 'rejected') return 'error'
+      return 'process'
+    },
+    adoptionStatusText() {
+      if (!this.myAdoption) return ''
+      const s = this.myAdoption.status
+      if (s === 'pending') return '您的领养申请已提交，正在等待审核...'
+      if (s === 'approved') return '恭喜！您的领养申请已通过审核，领养完成！'
+      if (s === 'rejected') return '很遗憾，您的领养申请未通过。' + (this.myAdoption.remark ? '原因：' + this.myAdoption.remark : '')
+      return ''
+    },
+    adoptionAlertType() {
+      if (!this.myAdoption) return 'info'
+      const s = this.myAdoption.status
+      if (s === 'pending') return 'warning'
+      if (s === 'approved') return 'success'
+      if (s === 'rejected') return 'error'
+      return 'info'
+    }
+  },
   mounted() {
     animalApi.publicGet(this.$route.params.id).then(r => {
       this.a = r.data
@@ -91,10 +142,19 @@ export default {
         healthApi.publicList({ animalId: this.a.id }).then(hr => {
           this.healthRecords = hr.data || []
         })
+        this.loadMyAdoption()
       }
     }).finally(() => { this.loading = false })
   },
   methods: {
+    loadMyAdoption() {
+      if (!isLoggedIn()) return
+      const u = getUser()
+      if (u.role !== 'user') return
+      adoptionApi.my({ animalId: this.a.id }).then(r => {
+        this.myAdoption = r.data || null
+      })
+    },
     apply() {
       if (!isLoggedIn()) {
         this.$message.warning('请先登录'); this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } }); return
@@ -112,6 +172,7 @@ export default {
         adoptionApi.add(this.form).then(() => {
           this.$message.success('申请已提交，请等待审核')
           this.show = false
+          this.loadMyAdoption()
         }).finally(() => { this.submitting = false })
       })
     }
@@ -120,6 +181,14 @@ export default {
 </script>
 
 <style scoped>
+.process-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
+}
+.adoption-status-tip {
+  margin-top: 16px;
+}
 .health-section {
   margin-top: 30px;
   padding-top: 20px;

@@ -127,6 +127,17 @@ CREATE TABLE notice (
   deleted INT DEFAULT 0
 );
 
+DROP TABLE IF EXISTS message;
+CREATE TABLE message (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  title VARCHAR(255),
+  content TEXT,
+  is_read INT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted INT DEFAULT 0
+);
+
 DROP TABLE IF EXISTS station_review;
 CREATE TABLE station_review (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
