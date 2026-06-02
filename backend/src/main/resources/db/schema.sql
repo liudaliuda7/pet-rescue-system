@@ -126,3 +126,15 @@ CREATE TABLE notice (
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted INT DEFAULT 0
 );
+
+DROP TABLE IF EXISTS station_review;
+CREATE TABLE station_review (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  station_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  adoption_id BIGINT NOT NULL,
+  rating INT NOT NULL,
+  content TEXT,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted INT DEFAULT 0
+);

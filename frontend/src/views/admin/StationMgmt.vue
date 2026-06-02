@@ -17,6 +17,16 @@
       <el-table-column prop="animalAvailable" label="待领养" width="90" sortable="custom"/>
       <el-table-column prop="adoptedTotal" label="领养成功" width="100" sortable="custom"/>
       <el-table-column prop="helpTotal" label="处理求助" width="100" sortable="custom"/>
+      <el-table-column prop="avgRating" label="平均评分" width="200" sortable="custom">
+        <template slot-scope="s">
+          <div v-if="s.row.reviewCount > 0" style="display:flex;align-items:center;white-space:nowrap;">
+            <el-rate :value="s.row.avgRating" disabled style="margin-right:12px;"/>
+            <span style="font-size:13px;color:#606266;">{{ s.row.avgRating }}分</span>
+          </div>
+          <span v-else style="color:#c0c4cc;">暂无</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="reviewCount" label="评价数" width="90" sortable="custom"/>
       <el-table-column prop="latestActivityTime" label="最近动态时间" width="170">
         <template slot-scope="s">{{ s.row.latestActivityTime ? s.row.latestActivityTime.replace('T', ' ').substring(0, 16) : '—' }}</template>
       </el-table-column>

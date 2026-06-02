@@ -64,15 +64,36 @@
               </template>
             </el-table-column>
             <el-table-column prop="createTime" label="申请时间" width="180"/>
+            <el-table-column label="操作" width="100">
+              <template slot-scope="s">
+                <el-button v-if="s.row.status==='approved' && !reviewedStations[s.row.stationId]" size="mini" type="primary" @click="openReview(s.row)">评价</el-button>
+                <el-tag v-else-if="s.row.status==='approved' && reviewedStations[s.row.stationId]" size="mini" type="info">已评价</el-tag>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
+
+        <el-dialog title="评价救助站" :visible.sync="reviewShow" width="500px">
+          <el-form :model="reviewForm" :rules="reviewRules" ref="rf" label-width="80px">
+            <el-form-item label="评分" prop="rating">
+              <el-rate v-model="reviewForm.rating" show-score score-template="{value}分"/>
+            </el-form-item>
+            <el-form-item label="评价内容" prop="content">
+              <el-input v-model="reviewForm.content" type="textarea" :rows="4" placeholder="请输入您的评价"/>
+            </el-form-item>
+          </el-form>
+          <span slot="footer">
+            <el-button @click="reviewShow=false">取消</el-button>
+            <el-button type="primary" :loading="reviewLoading" @click="submitReview">提交</el-button>
+          </span>
+        </el-dialog>
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
-import { userApi, helpApi, adoptionApi } from '@/api'
+import { userApi, helpApi, adoptionApi, reviewApi } from '@/api'
 import { getUser, setAuth } from '@/utils/auth'
 export default {
   data() {
@@ -84,13 +105,23 @@ export default {
         oldPassword: [{ required: true, message: '请输入原密码' }],
         newPassword: [{ required: true, message: '请输入新密码' }, { min: 6, message: '至少 6 位' }]
       },
-      helps: [], adoptions: []
+      helps: [], adoptions: [],
+      reviewShow: false, reviewLoading: false,
+      reviewForm: { rating: 5, content: '', adoptionId: null },
+      reviewRules: {
+        rating: [{ required: true, message: '请选择评分' }],
+        content: [{ required: true, message: '请输入评价内容' }]
+      },
+      reviewedStations: {}
     }
   },
   watch: {
     tab(v) {
       if (v === 'help') helpApi.page({ current: 1, size: 50 }).then(r => { this.helps = r.data.records || [] })
-      if (v === 'adopt') adoptionApi.page({ current: 1, size: 50 }).then(r => { this.adoptions = r.data.records || [] })
+      if (v === 'adopt') adoptionApi.page({ current: 1, size: 50 }).then(r => {
+        this.adoptions = r.data.records || []
+        this.checkReviewedStations()
+      })
     }
   },
   methods: {
@@ -111,6 +142,30 @@ export default {
           this.$message.success('密码已修改')
           this.pwd = { oldPassword: '', newPassword: '' }
         })
+      })
+    },
+    checkReviewedStations() {
+      const stationIds = [...new Set(this.adoptions.filter(a => a.status === 'approved' && a.stationId).map(a => a.stationId))]
+      stationIds.forEach(sid => {
+        reviewApi.check(sid).then(r => {
+          this.$set(this.reviewedStations, sid, r.data)
+        })
+      })
+    },
+    openReview(row) {
+      this.reviewForm = { rating: 5, content: '', adoptionId: row.id }
+      this.reviewShow = true
+      this.$nextTick(() => this.$refs.rf && this.$refs.rf.clearValidate())
+    },
+    submitReview() {
+      this.$refs.rf.validate(ok => {
+        if (!ok) return
+        this.reviewLoading = true
+        reviewApi.add(this.reviewForm).then(() => {
+          this.$message.success('评价成功')
+          this.reviewShow = false
+          this.checkReviewedStations()
+        }).finally(() => { this.reviewLoading = false })
       })
     }
   }

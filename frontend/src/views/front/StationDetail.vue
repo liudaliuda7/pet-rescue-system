@@ -71,19 +71,37 @@
         <el-empty v-else description="暂无正在救助的动物"/>
         <el-pagination v-if="total > q.size" background layout="prev, pager, next" :total="total" :page-size="q.size" :current-page.sync="q.current" @current-change="loadAnimals()" style="text-align:center;margin-top:20px;"/>
       </div>
+
+      <div class="review-section">
+        <h3 class="section-title">用户评价</h3>
+        <div v-if="reviews.length" class="review-list">
+          <div v-for="r in reviews" :key="r.id" class="review-item">
+            <div class="review-header">
+              <span class="review-user">{{ r.userName }}</span>
+              <el-rate :value="r.rating" disabled show-score score-template="{value}分" style="display:inline-flex;"/>
+            </div>
+            <div class="review-content">{{ r.content || '用户未填写评价内容' }}</div>
+            <div class="review-time">{{ r.createTime | fmtTime }}</div>
+          </div>
+        </div>
+        <el-empty v-else description="暂无用户评价"/>
+        <el-pagination v-if="reviewTotal > reviewQuery.size" background layout="prev, pager, next" :total="reviewTotal" :page-size="reviewQuery.size" :current-page.sync="reviewQuery.current" @current-change="loadReviews()" style="text-align:center;margin-top:20px;"/>
+      </div>
     </div>
     <el-empty v-if="!loading && !station" description="救助站不存在"/>
   </div>
 </template>
 
 <script>
-import { stationApi, animalApi, statsApi } from '@/api'
+import { stationApi, animalApi, statsApi, reviewApi } from '@/api'
 export default {
   data() {
     return {
       station: null, loading: true, animals: [], total: 0,
       stats: {},
       activities: [],
+      reviews: [], reviewTotal: 0,
+      reviewQuery: { current: 1, size: 5 },
       q: { current: 1, size: 12 },
       placeholder: 'https://via.placeholder.com/200x200/cccccc/666666?text=Station',
       animalPlaceholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
@@ -103,6 +121,7 @@ export default {
         this.loadAnimals()
         this.loadStats()
         this.loadActivities()
+        this.loadReviews()
       }
     }).finally(() => { this.loading = false })
   },
@@ -121,6 +140,12 @@ export default {
     loadActivities() {
       stationApi.activities(this.$route.params.id).then(r => {
         this.activities = r.data || []
+      })
+    },
+    loadReviews() {
+      reviewApi.publicPage({ stationId: this.$route.params.id, current: this.reviewQuery.current, size: this.reviewQuery.size }).then(r => {
+        this.reviews = r.data.records || []
+        this.reviewTotal = r.data.total || 0
       })
     },
     actTagType(type) {
@@ -239,5 +264,41 @@ export default {
   font-size: 12px;
   color: #909399;
   margin-top: 4px;
+}
+.review-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
+}
+.review-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+.review-item {
+  padding: 16px;
+  border-bottom: 1px solid #ebeef5;
+}
+.review-item:last-child {
+  border-bottom: none;
+}
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.review-user {
+  font-weight: 600;
+  color: #303133;
+}
+.review-content {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.review-time {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

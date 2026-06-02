@@ -8,11 +8,13 @@ import com.rescue.entity.Animal;
 import com.rescue.entity.HealthRecord;
 import com.rescue.entity.HelpRequest;
 import com.rescue.entity.RescueStation;
+import com.rescue.entity.StationReview;
 import com.rescue.mapper.AdoptionMapper;
 import com.rescue.mapper.AnimalMapper;
 import com.rescue.mapper.HealthRecordMapper;
 import com.rescue.mapper.HelpRequestMapper;
 import com.rescue.mapper.RescueStationMapper;
+import com.rescue.mapper.StationReviewMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,7 @@ public class StationController {
     @Autowired private AdoptionMapper adoptionMapper;
     @Autowired private HelpRequestMapper helpRequestMapper;
     @Autowired private HealthRecordMapper healthRecordMapper;
+    @Autowired private StationReviewMapper stationReviewMapper;
 
     @GetMapping("/page")
     public Result<?> page(@RequestParam(defaultValue = "1") int current,
@@ -79,6 +82,17 @@ public class StationController {
             }
 
             Map<Long, LocalDateTime> latestActivityMap = new HashMap<>();
+            // Review stats per station
+            Map<Long, Long> reviewCountMap = new HashMap<>();
+            Map<Long, Double> avgRatingMap = new HashMap<>();
+            List<Map<String, Object>> reviewCounts = stationReviewMapper.selectMaps(
+                new QueryWrapper<StationReview>().select("station_id", "count(*) as cnt", "avg(rating) as avg_rating").in("station_id", ids).groupBy("station_id"));
+            for (Map<String, Object> m : reviewCounts) {
+                Long sid = ((Number) (m.get("station_id") != null ? m.get("station_id") : m.get("STATION_ID"))).longValue();
+                reviewCountMap.put(sid, ((Number) (m.get("cnt") != null ? m.get("cnt") : m.get("CNT"))).longValue());
+                Object avg = m.get("avg_rating") != null ? m.get("avg_rating") : m.get("AVG_RATING");
+                if (avg != null) avgRatingMap.put(sid, Math.round(((Number) avg).doubleValue() * 10.0) / 10.0);
+            }
             // Latest animal creation time per station
             List<Map<String, Object>> animalLatest = animalMapper.selectMaps(
                 new QueryWrapper<Animal>().select("station_id", "max(create_time) as latest").in("station_id", ids).groupBy("station_id"));
@@ -117,15 +131,17 @@ public class StationController {
                 row.put("adoptedTotal", adoptedMap.getOrDefault(s.getId(), 0L));
                 row.put("helpTotal", helpTotalMap.getOrDefault(s.getId(), 0L));
                 row.put("latestActivityTime", latestActivityMap.get(s.getId()));
+                row.put("reviewCount", reviewCountMap.getOrDefault(s.getId(), 0L));
+                row.put("avgRating", avgRatingMap.getOrDefault(s.getId(), 0.0));
                 enriched.add(row);
             }
 
             if (sortField != null && !sortField.isEmpty()) {
                 boolean asc = "asc".equalsIgnoreCase(sortOrder);
                 enriched.sort((a, b) -> {
-                    long va = ((Number) a.getOrDefault(sortField, 0L)).longValue();
-                    long vb = ((Number) b.getOrDefault(sortField, 0L)).longValue();
-                    return asc ? Long.compare(va, vb) : Long.compare(vb, va);
+                    double va = ((Number) a.getOrDefault(sortField, 0)).doubleValue();
+                    double vb = ((Number) b.getOrDefault(sortField, 0)).doubleValue();
+                    return asc ? Double.compare(va, vb) : Double.compare(vb, va);
                 });
             }
         }
