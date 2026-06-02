@@ -17,6 +17,9 @@
       <el-table-column prop="animalAvailable" label="待领养" width="90" sortable="custom"/>
       <el-table-column prop="adoptedTotal" label="领养成功" width="100" sortable="custom"/>
       <el-table-column prop="helpTotal" label="处理求助" width="100" sortable="custom"/>
+      <el-table-column prop="latestActivityTime" label="最近动态时间" width="170">
+        <template slot-scope="s">{{ s.row.latestActivityTime ? s.row.latestActivityTime.replace('T', ' ').substring(0, 16) : '—' }}</template>
+      </el-table-column>
       <el-table-column label="操作" width="180">
         <template slot-scope="s">
           <el-button size="mini" @click="open(s.row)">编辑</el-button>

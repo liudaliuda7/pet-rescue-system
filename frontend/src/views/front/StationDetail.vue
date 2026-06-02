@@ -35,6 +35,21 @@
         </div>
       </div>
 
+      <div class="activity-section">
+        <h3 class="section-title">最新动态</h3>
+        <div v-if="activities.length" class="activity-timeline">
+          <div v-for="(act, idx) in activities" :key="idx" class="activity-item" @click="goActivity(act)">
+            <div class="activity-dot" :class="'dot-' + act.type"></div>
+            <div class="activity-content">
+              <div class="activity-title">{{ act.title }}</div>
+              <div class="activity-time">{{ act.time | fmtTime }}</div>
+            </div>
+            <el-tag size="mini" :type="actTagType(act.type)">{{ actLabel(act.type) }}</el-tag>
+          </div>
+        </div>
+        <el-empty v-else description="暂无最近动态"/>
+      </div>
+
       <div class="animal-section">
         <h3 class="section-title">正在救助的动物</h3>
         <el-row :gutter="16" v-if="animals.length">
@@ -68,9 +83,16 @@ export default {
     return {
       station: null, loading: true, animals: [], total: 0,
       stats: {},
+      activities: [],
       q: { current: 1, size: 12 },
       placeholder: 'https://via.placeholder.com/200x200/cccccc/666666?text=Station',
       animalPlaceholder: 'https://via.placeholder.com/400x240/cccccc/666666?text=No+Image'
+    }
+  },
+  filters: {
+    fmtTime(v) {
+      if (!v) return ''
+      return v.replace('T', ' ').substring(0, 16)
     }
   },
   mounted() {
@@ -80,6 +102,7 @@ export default {
       if (this.station) {
         this.loadAnimals()
         this.loadStats()
+        this.loadActivities()
       }
     }).finally(() => { this.loading = false })
   },
@@ -94,6 +117,24 @@ export default {
       statsApi.station(this.$route.params.id).then(r => {
         this.stats = r.data || {}
       })
+    },
+    loadActivities() {
+      stationApi.activities(this.$route.params.id).then(r => {
+        this.activities = r.data || []
+      })
+    },
+    actTagType(type) {
+      return { new_animal: 'success', adoption: '', help_request: 'warning', health_record: 'info' }[type] || ''
+    },
+    actLabel(type) {
+      return { new_animal: '新动物', adoption: '领养', help_request: '求助', health_record: '健康' }[type] || ''
+    },
+    goActivity(act) {
+      if (act.type === 'new_animal' || act.type === 'health_record') {
+        this.$router.push('/animal/' + act.relatedId)
+      } else if (act.type === 'help_request') {
+        this.$router.push('/help')
+      }
     }
   }
 }
@@ -153,5 +194,50 @@ export default {
   height: 180px;
   object-fit: cover;
   display: block;
+}
+.activity-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ebeef5;
+}
+.activity-timeline {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.activity-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px dashed #ebeef5;
+  cursor: pointer;
+  transition: background .2s;
+  border-radius: 6px;
+}
+.activity-item:hover {
+  background: #f5f7fa;
+}
+.activity-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.dot-new_animal { background: #67c23a; }
+.dot-adoption { background: #409eff; }
+.dot-help_request { background: #e6a23c; }
+.dot-health_record { background: #909399; }
+.activity-content {
+  flex: 1;
+}
+.activity-title {
+  font-size: 14px;
+  color: #303133;
+}
+.activity-time {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
 }
 </style>

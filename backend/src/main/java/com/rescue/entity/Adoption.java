@@ -33,4 +33,8 @@ public class Adoption {
     private String stationName;
     @TableField(exist = false)
     private Integer visitCount;
+    @TableField(exist = false)
+    private String latestHealthTime;
+    @TableField(exist = false)
+    private String latestHealthContent;
 }

@@ -54,6 +54,15 @@
               </template>
             </el-table-column>
             <el-table-column prop="remark" label="备注"/>
+            <el-table-column label="最新健康记录" width="220">
+              <template slot-scope="s">
+                <div v-if="s.row.latestHealthTime">
+                  <div style="font-size:12px;color:#909399;">{{ s.row.latestHealthTime.replace('T',' ').substring(0,16) }}</div>
+                  <div style="font-size:12px;margin-top:2px;">{{ s.row.latestHealthContent || '—' }}</div>
+                </div>
+                <span v-else style="color:#c0c4cc;">暂无</span>
+              </template>
+            </el-table-column>
             <el-table-column prop="createTime" label="申请时间" width="180"/>
           </el-table>
         </div>

@@ -20,7 +20,7 @@ export const userApi = {
   updateProfile: d => request.put('/user/profile', d),
   changePassword: d => request.put('/user/password', d)
 }
-export const stationApi = { ...crud('/station'), list: () => request.get('/station/list'), publicList: () => request.get('/station/public/list'), publicGet: id => request.get('/station/public/' + id) }
+export const stationApi = { ...crud('/station'), list: () => request.get('/station/list'), publicList: () => request.get('/station/public/list'), publicGet: id => request.get('/station/public/' + id), activities: id => request.get('/station/public/' + id + '/activities') }
 export const animalTypeApi = { ...crud('/animal-type'), list: () => request.get('/animal-type/list'), publicList: () => request.get('/animal-type/public/list') }
 export const animalApi = {
   ...crud('/animal'),

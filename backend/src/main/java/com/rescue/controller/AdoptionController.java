@@ -9,6 +9,7 @@ import com.rescue.entity.Animal;
 import com.rescue.entity.User;
 import com.rescue.mapper.AdoptionMapper;
 import com.rescue.mapper.AnimalMapper;
+import com.rescue.mapper.HealthRecordMapper;
 import com.rescue.mapper.RescueStationMapper;
 import com.rescue.mapper.UserMapper;
 import com.rescue.mapper.VisitRecordMapper;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.rescue.entity.RescueStation;
 import com.rescue.entity.VisitRecord;
+import com.rescue.entity.HealthRecord;
 
 @RestController
 @RequestMapping("/adoption")
@@ -30,6 +32,7 @@ public class AdoptionController {
     @Autowired private RescueStationMapper stationMapper;
     @Autowired private UserMapper userMapper;
     @Autowired private VisitRecordMapper visitRecordMapper;
+    @Autowired private HealthRecordMapper healthRecordMapper;
 
     private void enrich(List<Adoption> list) {
         if (list == null || list.isEmpty()) return;
@@ -46,6 +49,17 @@ public class AdoptionController {
                 m -> ((Number) (m.get("adoption_id") != null ? m.get("adoption_id") : m.get("ADOPTION_ID"))).longValue(),
                 m -> ((Number) (m.get("cnt") != null ? m.get("cnt") : m.get("CNT"))).intValue(),
                 (a, b) -> a));
+
+        List<Long> animalIds = list.stream().map(Adoption::getAnimalId).filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, HealthRecord> latestHealthMap = new java.util.HashMap<>();
+        if (!animalIds.isEmpty()) {
+            List<HealthRecord> allHealth = healthRecordMapper.selectList(
+                new QueryWrapper<HealthRecord>().in("animal_id", animalIds).orderByDesc("record_date"));
+            for (HealthRecord hr : allHealth) {
+                latestHealthMap.putIfAbsent(hr.getAnimalId(), hr);
+            }
+        }
+
         for (Adoption r : list) {
             Animal a = r.getAnimalId() == null ? null : animalMap.get(r.getAnimalId());
             if (a != null) {
@@ -58,6 +72,12 @@ public class AdoptionController {
             }
             if (r.getUserId() != null) r.setUserName(userMap.get(r.getUserId()));
             r.setVisitCount(visitCountMap.getOrDefault(r.getId(), 0));
+            HealthRecord latestHr = r.getAnimalId() != null ? latestHealthMap.get(r.getAnimalId()) : null;
+            if (latestHr != null) {
+                r.setLatestHealthTime(latestHr.getRecordDate() != null ? latestHr.getRecordDate().toString() : null);
+                String content = latestHr.getContent();
+                r.setLatestHealthContent(content != null && content.length() > 30 ? content.substring(0, 30) + "..." : content);
+            }
         }
     }
 
