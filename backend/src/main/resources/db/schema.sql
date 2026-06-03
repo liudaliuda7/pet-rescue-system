@@ -149,3 +149,16 @@ CREATE TABLE station_review (
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted INT DEFAULT 0
 );
+
+DROP TABLE IF EXISTS animal_claim;
+CREATE TABLE animal_claim (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  animal_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  proof_desc TEXT,
+  proof_images VARCHAR(1000),
+  status VARCHAR(16) DEFAULT 'pending',
+  remark VARCHAR(255),
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted INT DEFAULT 0
+);

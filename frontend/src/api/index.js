@@ -52,6 +52,7 @@ export const noticeApi = {
 }
 export const statsApi = { dashboard: () => request.get('/stats/dashboard'), station: id => request.get('/stats/station/' + id) }
 export const systemApi = { info: () => request.get('/system/info') }
+export const animalClaimApi = { ...crud('/animal-claim'), audit: d => request.put('/animal-claim/audit', d), my: p => request.get('/animal-claim/my', { params: p }) }
 export const reviewApi = {
   publicPage: p => request.get('/review/public/station/' + p.stationId, { params: { current: p.current, size: p.size } }),
   add: d => request.post('/review', d),

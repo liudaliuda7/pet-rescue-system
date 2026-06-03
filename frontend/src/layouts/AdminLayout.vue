@@ -10,6 +10,7 @@
         <el-menu-item index="/admin/help-record"><i class="el-icon-document"/><span>求助记录管理</span></el-menu-item>
         <el-menu-item index="/admin/animal-type"><i class="el-icon-collection-tag"/><span>动物种类管理</span></el-menu-item>
         <el-menu-item index="/admin/animal"><i class="el-icon-orange"/><span>流浪动物管理</span></el-menu-item>
+        <el-menu-item index="/admin/claim"><i class="el-icon-s-claim"/><span>认领审核管理</span></el-menu-item>
         <el-submenu index="adopt">
           <template slot="title"><i class="el-icon-view"/><span>回访领养管理</span></template>
           <el-menu-item index="/admin/adoption">领养管理</el-menu-item>

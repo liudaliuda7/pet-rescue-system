@@ -35,6 +35,7 @@ const routes = [
       { path: 'help-record', name: 'admin-help-record', component: () => import('@/views/admin/HelpRecordMgmt.vue') },
       { path: 'animal-type', name: 'admin-animal-type', component: () => import('@/views/admin/AnimalTypeMgmt.vue') },
       { path: 'animal', name: 'admin-animal', component: () => import('@/views/admin/AnimalMgmt.vue') },
+      { path: 'claim', name: 'admin-claim', component: () => import('@/views/admin/ClaimMgmt.vue') },
       { path: 'adoption', name: 'admin-adoption', component: () => import('@/views/admin/AdoptionMgmt.vue') },
       { path: 'visit', name: 'admin-visit', component: () => import('@/views/admin/VisitMgmt.vue') },
       { path: 'health', name: 'admin-health', component: () => import('@/views/admin/HealthMgmt.vue') },

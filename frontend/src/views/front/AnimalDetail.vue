@@ -7,8 +7,8 @@
         </el-col>
         <el-col :span="14">
           <h2 style="margin:0 0 10px;">{{ a.name }}
-            <el-tag :type="a.status==='available'?'success':a.status==='adopted'?'info':'warning'">
-              {{ a.status==='available'?'待领养':a.status==='adopted'?'已领养':'治疗中' }}
+            <el-tag :type="a.status==='available'?'success':a.status==='adopted'?'info':a.status==='claimed'?'':'warning'">
+              {{ a.status==='available'?'待领养':a.status==='adopted'?'已领养':a.status==='claimed'?'已认领':'治疗中' }}
             </el-tag>
           </h2>
           <el-descriptions :column="1" border>
@@ -25,6 +25,7 @@
           </el-descriptions>
           <div style="margin-top:20px;">
             <el-button type="primary" :disabled="a.status !== 'available'" @click="apply">申请领养</el-button>
+            <el-button type="warning" @click="applyClaim">认领</el-button>
             <el-button @click="$router.back()">返回</el-button>
           </div>
         </el-col>
@@ -85,11 +86,27 @@
         <el-button type="primary" :loading="submitting" @click="submit">提交申请</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog title="认领申请" :visible.sync="showClaim" width="500px">
+      <el-form :model="claimForm" :rules="claimRules" ref="claimF" label-width="100px">
+        <el-form-item label="证明描述" prop="proofDesc"><el-input v-model="claimForm.proofDesc" type="textarea" :rows="4" placeholder="请描述您的认领证明，如宠物特征、丢失时间地点等"/></el-form-item>
+        <el-form-item label="证明图片">
+          <el-upload :action="uploadUrl" :headers="uploadHeaders" :on-success="onClaimUpload" :on-remove="onClaimRemove" list-type="picture-card" :limit="5" ref="claimUpload">
+            <i class="el-icon-plus"></i>
+          </el-upload>
+          <div class="el-upload__tip">支持上传最多5张证明图片</div>
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button @click="showClaim=false">取消</el-button>
+        <el-button type="primary" :loading="claimSubmitting" @click="submitClaim">提交认领</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { animalApi, adoptionApi, healthApi } from '@/api'
+import { animalApi, adoptionApi, healthApi, animalClaimApi } from '@/api'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
@@ -102,6 +119,12 @@ export default {
         address: [{ required: true, message: '请填写地址' }],
         reason: [{ required: true, message: '请说明领养理由' }]
       },
+      showClaim: false, claimSubmitting: false, claimImages: [],
+      claimForm: { animalId: null, proofDesc: '', proofImages: '' },
+      claimRules: { proofDesc: [{ required: true, message: '请填写证明描述' }] },
+      myClaim: null,
+      uploadUrl: '/api/upload',
+      uploadHeaders: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
       placeholder: 'https://via.placeholder.com/600x400/cccccc/666666?text=No+Image'
     }
   },
@@ -143,6 +166,7 @@ export default {
           this.healthRecords = hr.data || []
         })
         this.loadMyAdoption()
+        this.loadMyClaim()
       }
     }).finally(() => { this.loading = false })
   },
@@ -174,6 +198,49 @@ export default {
           this.show = false
           this.loadMyAdoption()
         }).finally(() => { this.submitting = false })
+      })
+    },
+    applyClaim() {
+      if (!isLoggedIn()) {
+        this.$message.warning('请先登录'); this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } }); return
+      }
+      const u = getUser()
+      if (u.role !== 'user') { this.$message.warning('请使用普通用户账号申请认领'); return }
+      this.claimForm.animalId = this.a.id
+      this.claimForm.proofDesc = ''
+      this.claimForm.proofImages = ''
+      this.claimImages = []
+      if (this.$refs.claimUpload) this.$refs.claimUpload.clearFiles()
+      this.showClaim = true
+    },
+    onClaimUpload(res, file) {
+      if (res.code === 200) {
+        this.claimImages.push(res.data.url)
+        this.claimForm.proofImages = this.claimImages.join(',')
+      }
+    },
+    onClaimRemove(file) {
+      const url = file.response ? file.response.data.url : file.url
+      this.claimImages = this.claimImages.filter(i => i !== url)
+      this.claimForm.proofImages = this.claimImages.join(',')
+    },
+    submitClaim() {
+      this.$refs.claimF.validate(ok => {
+        if (!ok) return
+        this.claimSubmitting = true
+        animalClaimApi.add(this.claimForm).then(() => {
+          this.$message.success('认领申请已提交，请等待审核')
+          this.showClaim = false
+          this.loadMyClaim()
+        }).finally(() => { this.claimSubmitting = false })
+      })
+    },
+    loadMyClaim() {
+      if (!isLoggedIn()) return
+      const u = getUser()
+      if (u.role !== 'user') return
+      animalClaimApi.my({ animalId: this.a.id }).then(r => {
+        this.myClaim = r.data || null
       })
     }
   }
