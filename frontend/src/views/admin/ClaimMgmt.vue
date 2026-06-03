@@ -55,11 +55,11 @@
           <el-descriptions-item label="证明描述">{{ detail.proofDesc }}</el-descriptions-item>
           <el-descriptions-item label="备注" v-if="detail.remark">{{ detail.remark }}</el-descriptions-item>
         </el-descriptions>
-        <div v-if="detail.proofImages" style="margin-top:16px;">
+        <div v-if="detail.proofImages && detail.proofImages.length > 0" style="margin-top:16px;">
           <div style="font-weight:600;margin-bottom:8px;">证明图片：</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <el-image v-for="(img, idx) in detail.proofImages.split(',')" :key="idx"
-              :src="img" :preview-src-list="detail.proofImages.split(',')"
+            <el-image v-for="(img, idx) in detail.proofImages.split(',').filter(x => x)" :key="idx"
+              :src="img" :preview-src-list="detail.proofImages.split(',').filter(x => x)"
               style="width:120px;height:120px;border-radius:4px;" fit="cover"/>
           </div>
         </div>

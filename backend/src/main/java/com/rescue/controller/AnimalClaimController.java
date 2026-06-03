@@ -89,6 +89,7 @@ public class AnimalClaimController {
         if (cur == null) return Result.error("请先登录");
         r.setUserId(cur.getId());
         if (r.getStatus() == null) r.setStatus("pending");
+        if (r.getProofImages() != null && r.getProofImages().isEmpty()) r.setProofImages(null);
         mapper.insert(r);
         return Result.ok("认领申请已提交");
     }

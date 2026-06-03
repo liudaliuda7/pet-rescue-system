@@ -91,7 +91,7 @@
       <el-form :model="claimForm" :rules="claimRules" ref="claimF" label-width="100px">
         <el-form-item label="证明描述" prop="proofDesc"><el-input v-model="claimForm.proofDesc" type="textarea" :rows="4" placeholder="请描述您的认领证明，如宠物特征、丢失时间地点等"/></el-form-item>
         <el-form-item label="证明图片">
-          <el-upload :action="uploadUrl" :headers="uploadHeaders" :on-success="onClaimUpload" :on-remove="onClaimRemove" list-type="picture-card" :limit="5" ref="claimUpload">
+          <el-upload action="" :http-request="uploadClaimImage" :on-remove="onClaimRemove" list-type="picture-card" :limit="5" ref="claimUpload" :file-list="claimFileList">
             <i class="el-icon-plus"></i>
           </el-upload>
           <div class="el-upload__tip">支持上传最多5张证明图片</div>
@@ -107,6 +107,7 @@
 
 <script>
 import { animalApi, adoptionApi, healthApi, animalClaimApi } from '@/api'
+import request from '@/utils/request'
 import { isLoggedIn, getUser } from '@/utils/auth'
 export default {
   data() {
@@ -119,12 +120,10 @@ export default {
         address: [{ required: true, message: '请填写地址' }],
         reason: [{ required: true, message: '请说明领养理由' }]
       },
-      showClaim: false, claimSubmitting: false, claimImages: [],
+      showClaim: false, claimSubmitting: false, claimImages: [], claimFileList: [],
       claimForm: { animalId: null, proofDesc: '', proofImages: '' },
       claimRules: { proofDesc: [{ required: true, message: '请填写证明描述' }] },
       myClaim: null,
-      uploadUrl: '/api/upload',
-      uploadHeaders: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
       placeholder: 'https://via.placeholder.com/600x400/cccccc/666666?text=No+Image'
     }
   },
@@ -210,17 +209,24 @@ export default {
       this.claimForm.proofDesc = ''
       this.claimForm.proofImages = ''
       this.claimImages = []
-      if (this.$refs.claimUpload) this.$refs.claimUpload.clearFiles()
+      this.claimFileList = []
       this.showClaim = true
     },
-    onClaimUpload(res, file) {
-      if (res.code === 200) {
-        this.claimImages.push(res.data.url)
+    uploadClaimImage(param) {
+      const formData = new FormData()
+      formData.append('file', param.file)
+      request.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => {
+        const url = res.data.url
+        this.claimImages.push(url)
         this.claimForm.proofImages = this.claimImages.join(',')
-      }
+        param.onSuccess({ url })
+      }).catch(err => {
+        this.$message.error('图片上传失败')
+        param.onError(err)
+      })
     },
     onClaimRemove(file) {
-      const url = file.response ? file.response.data.url : file.url
+      const url = file.response ? file.response.url : file.url
       this.claimImages = this.claimImages.filter(i => i !== url)
       this.claimForm.proofImages = this.claimImages.join(',')
     },

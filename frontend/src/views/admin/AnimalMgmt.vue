@@ -82,10 +82,10 @@
           </el-descriptions-item>
           <el-descriptions-item label="证明描述" :span="2">{{ claim.proofDesc }}</el-descriptions-item>
         </el-descriptions>
-        <div v-if="claim.proofImages" style="margin-top:10px;">
+        <div v-if="claim.proofImages && claim.proofImages.length > 0" style="margin-top:10px;">
           <div style="font-size:13px;color:#606266;margin-bottom:6px;">证明图片：</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <el-image v-for="(img, idx) in claim.proofImages.split(',')" :key="idx" :src="img" :preview-src-list="claim.proofImages.split(',')" style="width:80px;height:80px;border-radius:4px;" fit="cover"/>
+            <el-image v-for="(img, idx) in claim.proofImages.split(',').filter(x => x)" :key="idx" :src="img" :preview-src-list="claim.proofImages.split(',').filter(x => x)" style="width:80px;height:80px;border-radius:4px;" fit="cover"/>
           </div>
         </div>
         <div v-if="claim.remark" style="margin-top:8px;font-size:13px;color:#909399;">备注：{{ claim.remark }}</div>
